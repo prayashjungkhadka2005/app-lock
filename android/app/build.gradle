@@ -43,6 +43,9 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+ sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
 
     buildTypes {
         release {
@@ -57,4 +60,15 @@ flutter {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
+ implementation 'androidx.appcompat:appcompat:1.5.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'com.google.android.material:material:1.4.0'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.5.2'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.5.2'    
+    implementation 'com.andrognito.pinlockview:pinlockview:2.1.0'
+
+    implementation 'com.andrognito.pinlockview:pinlockview:2.1.0'
+
+
 }

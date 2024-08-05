@@ -194,6 +194,4 @@ class AppsController extends GetxController implements GetxService {
     })] as ApplicationWithIcon)
         .icon;
   }
-
-  void removeFromLockedApps(Application app, BuildContext context) {}
 }
