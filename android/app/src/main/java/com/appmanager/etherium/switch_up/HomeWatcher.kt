@@ -9,7 +9,7 @@ import android.util.Log
 class HomeWatcher(private val mContext: Context) {
     private val mFilter: IntentFilter
     private var mListener: OnHomePressedListener? = null
-    public var mReceiver: InnerReceiver? = null
+    var mReceiver: InnerReceiver? = null
 
     fun setOnHomePressedListener(listener: OnHomePressedListener?) {
         mListener = listener
@@ -32,7 +32,6 @@ class HomeWatcher(private val mContext: Context) {
         fun onHomePressed()
         fun onHomeLongPressed()
     }
-
 
     inner class InnerReceiver : BroadcastReceiver() {
         val SYSTEM_DIALOG_REASON_KEY = "reason"

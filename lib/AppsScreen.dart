@@ -1,15 +1,15 @@
-import 'package:bbl_security/controllers/apps_controller.dart';
-import 'package:bbl_security/controllers/method_channel_controller.dart';
-import 'package:bbl_security/controllers/permission_controller.dart';
-import 'package:bbl_security/widgets/permission_dialog.dart';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:device_apps/device_apps.dart';
+import 'package:flutter_switch/flutter_switch.dart';
 import 'package:get/get.dart';
+import 'package:device_apps/device_apps.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../controllers/apps_controller.dart';
+import '../controllers/method_channel_controller.dart';
+import '../controllers/permission_controller.dart';
+import '../widgets/permission_dialog.dart';
 
 class AppsScreen extends StatefulWidget {
-  const AppsScreen({Key? key}) : super(key: key);
-
   @override
   _AppsScreenState createState() => _AppsScreenState();
 }
@@ -36,11 +36,9 @@ class _AppsScreenState extends State<AppsScreen> {
           .getPermission(Permission.ignoreBatteryOptimizations);
       await getPermissions();
       Get.find<MethodChannelController>().addToLockedAppsMethod();
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
+      setState(() {
+        isLoading = false;
+      });
     });
   }
 
@@ -51,12 +49,12 @@ class _AppsScreenState extends State<AppsScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            const Image(
-              image: AssetImage('assets/logo.png'),
+            Image.asset(
+              'assets/logo.png',
               width: 40,
               height: 40,
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Text(
               'BBL Security',
               style: Theme.of(context).appBarTheme.titleTextStyle,
@@ -65,7 +63,7 @@ class _AppsScreenState extends State<AppsScreen> {
         ),
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -74,41 +72,75 @@ class _AppsScreenState extends State<AppsScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.warning_amber_outlined,
                         size: 30,
                         color: Colors.amber,
                       ),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       Text(
                         'Not Secured',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Expanded(
                     child: GetBuilder<AppsController>(
+                      id: Get.find<AppsController>().addRemoveToUnlockUpdate,
                       builder: (appsController) {
                         return ListView.builder(
                           itemCount: appsController.unLockList.length,
                           itemBuilder: (context, index) {
-                            final app = appsController.unLockList[index];
-                            return Card(
-                              elevation: 2,
-                              margin: const EdgeInsets.symmetric(vertical: 4),
-                              color: Colors.grey[200],
-                              child: ListTile(
-                                leading: app is ApplicationWithIcon
-                                    ? Image.memory(app.icon)
-                                    : const Icon(Icons.android),
-                                title: Text(app.appName),
-                                trailing: const Icon(
-                                  Icons.lock_open,
-                                  color: Colors.redAccent,
+                            Application app = appsController.unLockList[index];
+                            Uint8List? iconData;
+                            if (app is ApplicationWithIcon) {
+                              iconData = app.icon;
+                            }
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 5),
+                              child: Card(
+                                elevation: 2,
+                                margin: EdgeInsets.symmetric(vertical: 4),
+                                color: Colors.grey[200],
+                                child: ListTile(
+                                  leading: iconData != null
+                                      ? CircleAvatar(
+                                          backgroundImage:
+                                              MemoryImage(iconData),
+                                          backgroundColor: Theme.of(context)
+                                              .primaryColorDark,
+                                        )
+                                      : Icon(Icons.android),
+                                  title: Text(app.appName),
+                                  trailing: SizedBox(
+                                    width:
+                                        60, // Fixed width to accommodate the switch
+                                    child: FlutterSwitch(
+                                      width: 50.0,
+                                      height: 25.0,
+                                      valueFontSize: 25.0,
+                                      toggleColor: Colors.white,
+                                      activeColor:
+                                          Theme.of(context).primaryColor,
+                                      inactiveColor:
+                                          Theme.of(context).primaryColorDark,
+                                      toggleSize: 20.0,
+                                      value: appsController.selectLockList
+                                          .contains(app.appName),
+                                      borderRadius: 30.0,
+                                      padding: 2.0,
+                                      showOnOff: false,
+                                      onToggle: (val) {
+                                        appsController.addToLockedApps(
+                                            app, context);
+                                      },
+                                    ),
+                                  ),
                                 ),
                               ),
                             );

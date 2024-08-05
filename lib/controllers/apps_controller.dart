@@ -135,7 +135,8 @@ class AppsController extends GetxController implements GetxService {
       if (selectLockList.contains(app.appName)) {
         selectLockList.remove(app.appName);
         lockList.removeWhere((em) => em.application!.appName == app.appName);
-        log("REMOVE: $selectLockList");
+        log("REMOVE: $selectLockList",
+            name: "addToLockedApps"); // Ensure this line is executed
       } else {
         if (lockList.length < 16) {
           selectLockList.add(app.appName);
@@ -156,7 +157,8 @@ class AppsController extends GetxController implements GetxService {
               ),
             ),
           );
-          log("ADD: $selectLockList", name: "addToLockedApps");
+          log("ADD: $selectLockList",
+              name: "addToLockedApps"); // Ensure this line is executed
           Get.find<MethodChannelController>().addToLockedAppsMethod();
         } else {
           Fluttertoast.showToast(
@@ -166,7 +168,8 @@ class AppsController extends GetxController implements GetxService {
     } catch (e) {
       log("-------$e", name: "addToLockedApps");
     }
-    prefs.setString(AppConstants.lockedApps, bblDataModelToJson(lockList));
+    await prefs.setString(
+        AppConstants.lockedApps, bblDataModelToJson(lockList));
     addToAppsLoading = false;
     update([addRemoveToUnlockUpdate]);
   }
