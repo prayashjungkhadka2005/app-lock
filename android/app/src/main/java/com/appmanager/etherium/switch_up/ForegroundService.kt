@@ -42,18 +42,21 @@ class ForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        println("onStartCommand called with intent: $intent\n\n\n\n\n\n\n\n\n")
         return super.onStartCommand(intent, flags, startId)
     }
 
     private fun startMyOwnForeground() {
+        println("Starting foreground service\n\n\n\n\n\n\n\n\n")
+
         mHomeWatcher.setOnHomePressedListener(object : HomeWatcher.OnHomePressedListener {
             override fun onHomePressed() {
-                println("onHomePressed")
+                println("onHomePressed\n\n\n\n\n\n\n\n\n")
                 currentAppActivityList.clear()
             }
 
             override fun onHomeLongPressed() {
-                println("onHomeLongPressed")
+                println("onHomeLongPressed\n\n\n\n\n\n\n\n\n")
                 currentAppActivityList.clear()
             }
         })
@@ -62,12 +65,14 @@ class ForegroundService : Service() {
     }
 
     override fun onDestroy() {
+        println("onDestroy called\n\n\n\n\n\n\n\n\n")
         timer.cancel()
         mHomeWatcher.stopWatch()
         super.onDestroy()
     }
 
     private fun timerRun() {
+        println("Starting timer\n\n\n\n\n\n\n\n\n")
         timer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 isTimerStarted = true
@@ -77,13 +82,15 @@ class ForegroundService : Service() {
     }
 
     private fun isServiceRunning() {
+        println("Checking if service is running\n\n\n\n\n\n\n\n\n")
+        
         val saveAppData: SharedPreferences = applicationContext.getSharedPreferences("save_app_data", Context.MODE_PRIVATE)
         val lockedAppList: List<String> = saveAppData.getString("app_data", "AppList")!!
             .replace("[", "")
             .replace("]", "")
             .split(",")
 
-        val mUsageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
+               val mUsageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
         val time = System.currentTimeMillis()
         val usageEvents = mUsageStatsManager.queryEvents(time - timerReload, time)
         val event = UsageEvents.Event()
@@ -91,22 +98,24 @@ class ForegroundService : Service() {
         run breaking@{
             while (usageEvents.hasNextEvent()) {
                 usageEvents.getNextEvent(event)
+                val currentPackageName = event.packageName.toString().trim() // Capture current package name
+
                 for (element in lockedAppList) {
-                    if (event.packageName.toString().trim() == element.toString().trim()) {
+                    if (currentPackageName == element.trim()) {
                         if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED && currentAppActivityList.isEmpty()) {
                             currentAppActivityList.add(event.className)
-                            println("$currentAppActivityList-----List--added")
-                            launchDartAuthScreen()
+                            println("$currentAppActivityList-----List--added\n\n\n\n\n\n\n\n\n")
+                            launchDartAuthScreen(currentPackageName) // Pass the current package name
                             return@breaking
                         } else if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED) {
                             if (!currentAppActivityList.contains(event.className)) {
                                 currentAppActivityList.add(event.className)
-                                println("$currentAppActivityList-----List--added")
+                                println("$currentAppActivityList-----List--added\n\n\n\n\n\n\n\n\n")
                             }
                         } else if (event.eventType == UsageEvents.Event.ACTIVITY_STOPPED) {
                             if (currentAppActivityList.contains(event.className)) {
                                 currentAppActivityList.remove(event.className)
-                                println("$currentAppActivityList-----List--remained")
+                                println("$currentAppActivityList-----List--remained\n\n\n\n\n\n\n\n\n")
                             }
                         }
                     }
@@ -115,9 +124,13 @@ class ForegroundService : Service() {
         }
     }
 
-    private fun launchDartAuthScreen() {
-        val intent = Intent(this, MainActivity::class.java) // MainActivity should handle the Dart screen
+    private fun launchDartAuthScreen(packageName: String) {
+        val intent = Intent(this, MainActivity::class.java) // Ensure MainActivity exists and is properly imported
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.putExtra("screenToShow", "auth")
+        intent.putExtra("packageName", packageName) // Use the correct package name
         startActivity(intent)
     }
 }
+
+
