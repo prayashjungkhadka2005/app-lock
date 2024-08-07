@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.util.Log
 
 class HomeWatcher(private val mContext: Context) {
     private val mFilter: IntentFilter
@@ -18,13 +17,19 @@ class HomeWatcher(private val mContext: Context) {
 
     fun startWatch() {
         if (mReceiver != null) {
+            println("HomeWatcher: Registering receiver")
             mContext.registerReceiver(mReceiver, mFilter)
+        } else {
+            println("HomeWatcher: Receiver is null")
         }
     }
 
     fun stopWatch() {
         if (mReceiver != null) {
+            println("HomeWatcher: Unregistering receiver")
             mContext.unregisterReceiver(mReceiver)
+        } else {
+            println("HomeWatcher: Receiver is null")
         }
     }
 
@@ -42,7 +47,7 @@ class HomeWatcher(private val mContext: Context) {
             if (action == Intent.ACTION_CLOSE_SYSTEM_DIALOGS) {
                 val reason = intent.getStringExtra(SYSTEM_DIALOG_REASON_KEY)
                 if (reason != null) {
-                    Log.e(TAG, "action:-$action,reason:-$reason")
+                    println("HomeWatcher: Action: $action, Reason: $reason")
                     if (mListener != null) {
                         if (reason == SYSTEM_DIALOG_REASON_HOME_KEY) {
                             mListener!!.onHomePressed()
@@ -50,13 +55,15 @@ class HomeWatcher(private val mContext: Context) {
                             mListener!!.onHomeLongPressed()
                         }
                     }
+                } else {
+                    println("HomeWatcher: Reason is null")
                 }
             }
         }
     }
 
     companion object {
-        const val TAG = "hg"
+        const val TAG = "HomeWatcher"
     }
 
     init {

@@ -1,5 +1,79 @@
+// plugins {
+//     id "com.android.application"
+//     id "org.jetbrains.kotlin.android"
+//     id "dev.flutter.flutter-gradle-plugin"
+// }
+
+// def localProperties = new Properties()
+// def localPropertiesFile = rootProject.file('local.properties')
+// if (localPropertiesFile.exists()) {
+//     localPropertiesFile.withReader('UTF-8') { reader ->
+//         localProperties.load(reader)
+//     }
+// }
+
+// def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+// if (flutterVersionCode == null) {
+//     flutterVersionCode = '1'
+// }
+
+// def flutterVersionName = localProperties.getProperty('flutter.versionName')
+// if (flutterVersionName == null) {
+//     flutterVersionName = '1.0'
+// }
+
+// android {
+//     compileSdkVersion 34
+//     namespace 'com.example.gobbl'
+//     ndkVersion '23.1.7779620'
+
+//     compileOptions {
+//         sourceCompatibility JavaVersion.VERSION_1_8
+//         targetCompatibility JavaVersion.VERSION_1_8
+//     }
+
+//     defaultConfig {
+//         applicationId 'com.example.gobbl'
+//         minSdk = 22
+//         targetSdk = 33
+//         versionCode flutterVersionCode.toInteger()
+//         versionName flutterVersionName
+//     }
+
+//     kotlinOptions {
+//         jvmTarget = "1.8"
+//     }
+//  sourceSets {
+//         main.java.srcDirs += 'src/main/kotlin'
+//     }
+
+//     buildTypes {
+//         release {
+//             signingConfig signingConfigs.debug
+//         }
+//     }
+// }
+
+// flutter {
+//     source = '../..'
+// }
+
+// dependencies {
+//     implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
+//  implementation 'androidx.appcompat:appcompat:1.5.0'
+//     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+//     implementation 'androidx.cardview:cardview:1.0.0'
+//     implementation 'com.google.android.material:material:1.4.0'
+//     implementation 'androidx.navigation:navigation-fragment-ktx:2.5.2'
+//     implementation 'androidx.navigation:navigation-ui-ktx:2.5.2'    
+//     implementation 'com.andrognito.pinlockview:pinlockview:2.1.0'
+
+//     implementation 'com.andrognito.pinlockview:pinlockview:2.1.0'
+
+
+// }
 plugins {
-    id "com.android.application"
+     id "com.android.application"
     id "org.jetbrains.kotlin.android"
     id "dev.flutter.flutter-gradle-plugin"
 }
@@ -43,7 +117,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
- sourceSets {
+    sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
@@ -59,16 +133,12 @@ flutter {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
- implementation 'androidx.appcompat:appcompat:1.5.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation 'androidx.appcompat:appcompat:1.5.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.5.2'
     implementation 'androidx.navigation:navigation-ui-ktx:2.5.2'    
     implementation 'com.andrognito.pinlockview:pinlockview:2.1.0'
-
-    implementation 'com.andrognito.pinlockview:pinlockview:2.1.0'
-
-
 }
