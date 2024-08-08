@@ -9,13 +9,11 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
-import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
-import java.util.*
+import androidx.core.content.ContextCompat
 
 class MainActivity : FlutterActivity() {
     private val channel = "flutter.native/helper"
@@ -28,14 +26,14 @@ class MainActivity : FlutterActivity() {
         saveAppData = applicationContext.getSharedPreferences("save_app_data", Context.MODE_PRIVATE)
         GeneratedPluginRegistrant.registerWith(FlutterEngine(this))
         MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, channel).setMethodCallHandler { call, result ->
-            when {
-                call.method.equals("addToLockedApps") -> {
+            when (call.method) {
+                "addToLockedApps" -> {
                     val args = call.arguments as HashMap<*, *>
                     println("MainActivity: $args ----- ARGS")
                     val greetings = showCustomNotification(args)
                     result.success(greetings)
                 }
-                call.method.equals("setPasswordInNative") -> {
+                "setPasswordInNative" -> {
                     val args = call.arguments
                     val editor: SharedPreferences.Editor = saveAppData!!.edit()
                     editor.putString("password", "$args")
@@ -43,20 +41,17 @@ class MainActivity : FlutterActivity() {
                     println("MainActivity: Password set: $args")
                     result.success("Success")
                 }
-                call.method.equals("checkOverlayPermission") -> {
+                "checkOverlayPermission" -> {
                     result.success(Settings.canDrawOverlays(this))
                 }
-                call.method.equals("stopForeground") -> {
+                "stopForeground" -> {
                     stopForegroundService()
                 }
-                call.method.equals("askOverlayPermission") -> {
+                "askOverlayPermission" -> {
                     result.success(checkOverlayPermission())
                 }
-                call.method.equals("askUsageStatsPermission") -> {
-                    if (!isAccessGranted()) {
-                        val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-                        startActivity(intent)
-                    }
+                "askUsageStatsPermission" -> {
+                    requestUsageStatsPermission()
                 }
             }
         }
@@ -109,10 +104,12 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun startForegroundService() {
-        if (Settings.canDrawOverlays(this)) {
+        if (Settings.canDrawOverlays(this) && isAccessGranted()) {
             setIfServiceClosed("1")
             println("MainActivity: Starting foreground service")
             ContextCompat.startForegroundService(this, Intent(this, ForegroundService::class.java))
+        } else {
+            println("MainActivity: Overlay or usage stats permission missing")
         }
     }
 
@@ -130,17 +127,25 @@ class MainActivity : FlutterActivity() {
         return Settings.canDrawOverlays(this)
     }
 
+    private fun checkUsageStatsPermission(): Boolean {
+        val appOpsManager = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        val mode = appOpsManager.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), packageName)
+        return mode == AppOpsManager.MODE_ALLOWED
+    }
+
+    private fun requestUsageStatsPermission() {
+        if (!checkUsageStatsPermission()) {
+            val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+            startActivity(intent)
+        }
+    }
+
     private fun isAccessGranted(): Boolean {
         return try {
             val packageManager = packageManager
-            val applicationInfo = packageManager.getApplicationInfo(
-                packageName, 0
-            )
+            val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
             val appOpsManager: AppOpsManager = getSystemService(APP_OPS_SERVICE) as AppOpsManager
-            val mode = appOpsManager.checkOpNoThrow(
-                AppOpsManager.OPSTR_GET_USAGE_STATS,
-                applicationInfo.uid, applicationInfo.packageName
-            )
+            val mode = appOpsManager.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, applicationInfo.uid, applicationInfo.packageName)
             mode == AppOpsManager.MODE_ALLOWED
         } catch (e: PackageManager.NameNotFoundException) {
             false

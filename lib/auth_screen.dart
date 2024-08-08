@@ -1,6 +1,5 @@
 // auth_screen.dart
 import 'package:flutter/material.dart';
-import 'package:get/get.dart'; // If using GetX for state management
 
 class AuthScreen extends StatelessWidget {
   @override
@@ -20,7 +19,6 @@ class AuthScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 20),
-            // Replace with your authentication widgets
             ElevatedButton(
               onPressed: () {
                 // Handle authentication logic here
