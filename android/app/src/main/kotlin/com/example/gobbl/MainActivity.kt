@@ -62,42 +62,42 @@ class MainActivity : FlutterActivity() {
 
     @SuppressLint("CommitPrefEdits", "LaunchActivityFromNotification")
     private fun showCustomNotification(args: HashMap<*, *>): String {
-        lockedAppList = emptyList()
-        println("MainActivity: showCustomNotification called with args: $args")
-        appInfo = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+    lockedAppList = emptyList()
+    println("MainActivity: showCustomNotification called with args: $args")
+    appInfo = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
 
-        val arr: ArrayList<Map<String, *>> = args["app_list"] as ArrayList<Map<String, *>>
+    val arr: ArrayList<Map<String, *>> = args["app_list"] as ArrayList<Map<String, *>>
 
-        for (element in arr) {
-            run breaking@{
-                for (i in appInfo!!.indices) {
-                    if (appInfo!![i].packageName.toString() == element["package_name"].toString()) {
-                        val ogList = lockedAppList
-                        lockedAppList = ogList + appInfo!![i]
-                        println("MainActivity: Locked app added: ${appInfo!![i].packageName}")
-                        return@breaking
-                    }
+    for (element in arr) {
+        run breaking@{
+            for (i in appInfo!!.indices) {
+                if (appInfo!![i].packageName.toString() == element["package_name"].toString()) {
+                    val ogList = lockedAppList
+                    lockedAppList = ogList + appInfo!![i]
+                    println("MainActivity: Locked app added: ${appInfo!![i].packageName}")
+                    return@breaking
                 }
             }
         }
-
-        var packageData: List<String> = emptyList()
-
-        for (element in lockedAppList) {
-            val ogList = packageData
-            packageData = ogList + element.packageName
-        }
-
-        val editor: SharedPreferences.Editor = saveAppData!!.edit()
-        editor.remove("app_data")
-        editor.putString("app_data", "$packageData")
-        editor.apply()
-        println("MainActivity: Locked apps saved: $packageData")
-
-        startForegroundService()
-
-        return "Success"
     }
+
+    var packageData: List<String> = emptyList()
+
+    for (element in lockedAppList) {
+        val ogList = packageData
+        packageData = ogList + element.packageName
+    }
+
+    val editor: SharedPreferences.Editor = saveAppData!!.edit()
+    editor.remove("app_data")
+    editor.putString("app_data", "$packageData")
+    editor.apply()
+    println("MainActivity: Locked apps saved: $packageData")
+
+    startForegroundService()
+
+    return "Success"
+}
 
     private fun setIfServiceClosed(data: String) {
         val editor: SharedPreferences.Editor = saveAppData!!.edit()
@@ -107,14 +107,15 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun startForegroundService() {
-        if (Settings.canDrawOverlays(this) && isAccessGranted()) {
-            setIfServiceClosed("1")
-            println("MainActivity: Starting foreground service")
-            ContextCompat.startForegroundService(this, Intent(this, ForegroundService::class.java))
-        } else {
-            println("MainActivity: Overlay or usage stats permission missing")
-        }
+    if (Settings.canDrawOverlays(this) && isAccessGranted()) {
+        setIfServiceClosed("1")
+        println("MainActivity: Starting foreground service")
+        ContextCompat.startForegroundService(this, Intent(this, ForegroundService::class.java))
+    } else {
+        println("MainActivity: Overlay or usage stats permission missing")
     }
+}
+
 
     private fun stopForegroundService() {
         setIfServiceClosed("0")

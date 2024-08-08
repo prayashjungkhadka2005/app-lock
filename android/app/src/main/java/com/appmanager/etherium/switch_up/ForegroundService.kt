@@ -20,8 +20,7 @@ class ForegroundService : Service() {
     private var currentAppActivityList = arrayListOf<String>()
     private var mHomeWatcher = HomeWatcher(this)
 
-    private var lastAuthLaunchTime: Long = 0
-    private val authLaunchDebounceTime = 3000 // 3 seconds debounce time
+    private var isAuthScreenDisplayed = false
 
     override fun onBind(intent: Intent): IBinder? {
         throw UnsupportedOperationException("Not implemented")
@@ -36,6 +35,9 @@ class ForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         println("$tag: Service onStartCommand")
+        if (intent?.action == "com.example.gobbl.AUTH_COMPLETED") {
+            onAuthScreenClosed()
+        }
         return START_STICKY
     }
 
@@ -119,7 +121,7 @@ class ForegroundService : Service() {
                             if (currentAppActivityList.isEmpty()) {
                                 currentAppActivityList.add(event.className)
                                 println("$tag: Activity resumed: ${event.className}")
-                                showAuthScreenDebounced()
+                                showAuthScreen()
                                 return@breaking
                             } else if (!currentAppActivityList.contains(event.className)) {
                                 currentAppActivityList.add(event.className)
@@ -144,23 +146,22 @@ class ForegroundService : Service() {
         }
     }
 
-    private fun showAuthScreenDebounced() {
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastAuthLaunchTime > authLaunchDebounceTime) {
-            showAuthScreen()
-            lastAuthLaunchTime = currentTime
-        } else {
-            println("$tag: Auth screen launch debounced")
+    private fun showAuthScreen() {
+        if (!isAuthScreenDisplayed) {
+            println("$tag: Launching authentication screen")
+            isAuthScreenDisplayed = true
+            val intent = Intent(this, AuthActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION)
+            }
+            println("$tag: Starting AuthActivity")
+            startActivity(intent)
         }
     }
 
-    private fun showAuthScreen() {
-        println("$tag: Launching authentication screen")
-        val intent = Intent(this, AuthActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        }
-        startActivity(intent)
+    fun onAuthScreenClosed() {
+        isAuthScreenDisplayed = false
     }
 }

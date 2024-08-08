@@ -12,9 +12,9 @@ class AuthScreen extends StatelessWidget {
         child: ElevatedButton(
           onPressed: () {
             // Logic for successful authentication
-            Get.back(); // Navigate back once authenticated
+            Navigator.pop(context, true); // Indicate successful authentication
           },
-          child: Text('Authenticate'),
+          child: Text('Authenticate App'),
         ),
       ),
     );
