@@ -53,6 +53,9 @@ class MainActivity : FlutterActivity() {
                 "askUsageStatsPermission" -> {
                     requestUsageStatsPermission()
                 }
+                else -> {
+                    result.notImplemented()
+                }
             }
         }
     }

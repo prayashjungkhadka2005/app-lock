@@ -1,8 +1,8 @@
 package com.example.gobbl
 
-import android.app.Service
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.Service
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
@@ -144,10 +144,10 @@ class ForegroundService : Service() {
     private fun showAuthScreen() {
         println("$tag: Launching authentication screen")
         val intent = Intent(this, AuthActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
-        
-        // Directly start the authentication screen
         startActivity(intent)
     }
 }

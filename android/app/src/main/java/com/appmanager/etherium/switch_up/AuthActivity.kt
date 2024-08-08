@@ -1,20 +1,25 @@
 package com.example.gobbl
 
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import io.flutter.embedding.android.FlutterActivity
-import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.plugins.GeneratedPluginRegistrant
 
-class AuthActivity : FlutterActivity() {
+class AuthActivity : AppCompatActivity() {
 
-    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
-        super.configureFlutterEngine(flutterEngine)
-        GeneratedPluginRegistrant.registerWith(flutterEngine)
-        flutterEngine.navigationChannel.setInitialRoute("/auth")
-    }
+    private val tag = "AuthActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        println("AuthActivity: onCreate called")
+        println("$tag: onCreate called")
+        launchFlutterAuthScreen()
+    }
+
+    private fun launchFlutterAuthScreen() {
+        val intent = FlutterActivity
+            .withNewEngine()
+            .initialRoute("/auth")
+            .build(this)
+        startActivity(intent)
+        finish() // To close AuthActivity and keep only the Flutter activity on stack
     }
 }

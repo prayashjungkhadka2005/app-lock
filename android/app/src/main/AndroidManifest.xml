@@ -39,10 +39,17 @@
 
         <activity
             android:name=".AuthActivity"
-            android:exported="false"
-            android:launchMode="singleTop"
+            android:exported="true"
+            android:launchMode="singleTask"
             android:excludeFromRecents="true">
-            <!-- No intent-filter for MAIN or DEFAULT -->
+        </activity>
+
+        <activity
+            android:name="io.flutter.embedding.android.FlutterActivity"
+            android:exported="true"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
         </activity>
 
         <service
