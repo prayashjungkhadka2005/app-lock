@@ -20,6 +20,9 @@ class ForegroundService : Service() {
     private var currentAppActivityList = arrayListOf<String>()
     private var mHomeWatcher = HomeWatcher(this)
 
+    private var lastAuthLaunchTime: Long = 0
+    private val authLaunchDebounceTime = 3000 // 3 seconds debounce time
+
     override fun onBind(intent: Intent): IBinder? {
         throw UnsupportedOperationException("Not implemented")
     }
@@ -116,7 +119,7 @@ class ForegroundService : Service() {
                             if (currentAppActivityList.isEmpty()) {
                                 currentAppActivityList.add(event.className)
                                 println("$tag: Activity resumed: ${event.className}")
-                                showAuthScreen()
+                                showAuthScreenDebounced()
                                 return@breaking
                             } else if (!currentAppActivityList.contains(event.className)) {
                                 currentAppActivityList.add(event.className)
@@ -138,6 +141,16 @@ class ForegroundService : Service() {
         // Print running apps only if there are significant changes
         if (runningApps.isNotEmpty()) {
             println("$tag: Running apps in background: $runningApps")
+        }
+    }
+
+    private fun showAuthScreenDebounced() {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastAuthLaunchTime > authLaunchDebounceTime) {
+            showAuthScreen()
+            lastAuthLaunchTime = currentTime
+        } else {
+            println("$tag: Auth screen launch debounced")
         }
     }
 
