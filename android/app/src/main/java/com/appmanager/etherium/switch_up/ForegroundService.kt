@@ -19,8 +19,8 @@ class ForegroundService : Service() {
     private var timerReload: Long = 1000 // 1 second
     private var currentAppActivityList = arrayListOf<String>()
     private var mHomeWatcher = HomeWatcher(this)
-
     private var isAuthScreenDisplayed = false
+    private var lastResumedPackage: String? = null
 
     override fun onBind(intent: Intent): IBinder? {
         throw UnsupportedOperationException("Not implemented")
@@ -28,13 +28,11 @@ class ForegroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        println("$tag: Service onCreate")
         startForegroundService()
         startMyOwnForeground()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        println("$tag: Service onStartCommand")
         if (intent?.action == "com.example.gobbl.AUTH_COMPLETED") {
             onAuthScreenClosed()
         }
@@ -60,18 +58,13 @@ class ForegroundService : Service() {
     }
 
     private fun startMyOwnForeground() {
-        println("$tag: Starting my own foreground service")
         mHomeWatcher.setOnHomePressedListener(object : HomeWatcher.OnHomePressedListener {
             override fun onHomePressed() {
-                println("$tag: Home button pressed")
                 currentAppActivityList.clear()
-                println("$tag: Cleared currentAppActivityList")
             }
 
             override fun onHomeLongPressed() {
-                println("$tag: Home button long pressed")
                 currentAppActivityList.clear()
-                println("$tag: Cleared currentAppActivityList")
             }
         })
         mHomeWatcher.startWatch()
@@ -79,14 +72,12 @@ class ForegroundService : Service() {
     }
 
     override fun onDestroy() {
-        println("$tag: Service onDestroy")
         timer.cancel()
         mHomeWatcher.stopWatch()
         super.onDestroy()
     }
 
     private fun timerRun() {
-        println("$tag: Starting timer")
         timer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 isServiceRunning()
@@ -109,59 +100,45 @@ class ForegroundService : Service() {
 
         val runningApps = mutableListOf<String>()
 
-        run breaking@{
-            while (usageEvents.hasNextEvent()) {
-                usageEvents.getNextEvent(event)
-                runningApps.add(event.packageName)
+        while (usageEvents.hasNextEvent()) {
+            usageEvents.getNextEvent(event)
+            runningApps.add(event.packageName)
 
-                when (event.eventType) {
-                    UsageEvents.Event.ACTIVITY_RESUMED -> {
-                        if (lockedAppList.contains(event.packageName.trim())) {
-                            println("$tag: Locked app resumed: ${event.packageName}")
-                            if (currentAppActivityList.isEmpty()) {
-                                currentAppActivityList.add(event.className)
-                                println("$tag: Activity resumed: ${event.className}")
-                                showAuthScreen()
-                                return@breaking
-                            } else if (!currentAppActivityList.contains(event.className)) {
-                                currentAppActivityList.add(event.className)
-                                println("$tag: Activity resumed: ${event.className}")
-                            }
+            when (event.eventType) {
+                UsageEvents.Event.ACTIVITY_RESUMED -> {
+                    if (lockedAppList.contains(event.packageName.trim())) {
+                        lastResumedPackage = event.packageName
+                        if (!isAuthScreenDisplayed) {
+                            showAuthScreen()
                         }
                     }
-                    UsageEvents.Event.ACTIVITY_STOPPED -> {
-                        if (currentAppActivityList.contains(event.className)) {
-                            currentAppActivityList.remove(event.className)
-                            println("$tag: Activity stopped: ${event.className}")
-                        }
-                    }
-                    else -> { /* Handle other event types if needed */ }
                 }
+                UsageEvents.Event.ACTIVITY_STOPPED -> {
+                    if (currentAppActivityList.contains(event.className)) {
+                        currentAppActivityList.remove(event.className)
+                    }
+                }
+                else -> { /* Handle other event types if needed */ }
             }
         }
 
-        // Print running apps only if there are significant changes
         if (runningApps.isNotEmpty()) {
             println("$tag: Running apps in background: $runningApps")
         }
     }
-
-    private fun showAuthScreen() {
-        if (!isAuthScreenDisplayed) {
-            println("$tag: Launching authentication screen")
-            isAuthScreenDisplayed = true
-            val intent = Intent(this, AuthActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION)
-            }
-            println("$tag: Starting AuthActivity")
-            startActivity(intent)
-        }
+private fun showAuthScreen() {
+    isAuthScreenDisplayed = true
+    val intent = Intent(this, AuthActivity::class.java).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
+        addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
     }
+    startActivity(intent)
+}
 
     fun onAuthScreenClosed() {
         isAuthScreenDisplayed = false
+        lastResumedPackage = null
     }
 }

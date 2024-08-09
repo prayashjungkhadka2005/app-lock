@@ -40,9 +40,9 @@
     android:name=".AuthActivity"
     android:label=""
     android:theme="@style/AppCompactTheme"
-    android:windowSoftInputMode="stateUnchanged"
-    android:excludeFromRecents="true"
-    android:launchMode="singleTask">
+    android:launchMode="singleTask"
+    android:taskAffinity=""
+    android:excludeFromRecents="true">
 </activity>
 
 
