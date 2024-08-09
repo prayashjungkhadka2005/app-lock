@@ -8,6 +8,7 @@ import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.WindowManager
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -22,43 +23,48 @@ class MainActivity : FlutterActivity() {
     private var saveAppData: SharedPreferences? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        saveAppData = applicationContext.getSharedPreferences("save_app_data", Context.MODE_PRIVATE)
-        GeneratedPluginRegistrant.registerWith(FlutterEngine(this))
-        MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, channel).setMethodCallHandler { call, result ->
-            when (call.method) {
-                "addToLockedApps" -> {
-                    val args = call.arguments as HashMap<*, *>
-                    println("MainActivity: $args ----- ARGS")
-                    val greetings = showCustomNotification(args)
-                    result.success(greetings)
-                }
-                "setPasswordInNative" -> {
-                    val args = call.arguments
-                    val editor: SharedPreferences.Editor = saveAppData!!.edit()
-                    editor.putString("password", "$args")
-                    editor.apply()
-                    println("MainActivity: Password set: $args")
-                    result.success("Success")
-                }
-                "checkOverlayPermission" -> {
-                    result.success(Settings.canDrawOverlays(this))
-                }
-                "stopForeground" -> {
-                    stopForegroundService()
-                }
-                "askOverlayPermission" -> {
-                    result.success(checkOverlayPermission())
-                }
-                "askUsageStatsPermission" -> {
-                    requestUsageStatsPermission()
-                }
-                else -> {
-                    result.notImplemented()
-                }
+    super.onCreate(savedInstanceState)
+    window.setFlags(
+        WindowManager.LayoutParams.FLAG_FULLSCREEN,
+        WindowManager.LayoutParams.FLAG_FULLSCREEN
+    )
+    setTheme(R.style.AppCompactTheme)
+    saveAppData = applicationContext.getSharedPreferences("save_app_data", Context.MODE_PRIVATE)
+    GeneratedPluginRegistrant.registerWith(FlutterEngine(this))
+    MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, channel).setMethodCallHandler { call, result ->
+        when (call.method) {
+            "addToLockedApps" -> {
+                val args = call.arguments as HashMap<*, *>
+                println("MainActivity: $args ----- ARGS")
+                val greetings = showCustomNotification(args)
+                result.success(greetings)
+            }
+            "setPasswordInNative" -> {
+                val args = call.arguments
+                val editor: SharedPreferences.Editor = saveAppData!!.edit()
+                editor.putString("password", "$args")
+                editor.apply()
+                println("MainActivity: Password set: $args")
+                result.success("Success")
+            }
+            "checkOverlayPermission" -> {
+                result.success(Settings.canDrawOverlays(this))
+            }
+            "stopForeground" -> {
+                stopForegroundService()
+            }
+            "askOverlayPermission" -> {
+                result.success(checkOverlayPermission())
+            }
+            "askUsageStatsPermission" -> {
+                requestUsageStatsPermission()
+            }
+            else -> {
+                result.notImplemented()
             }
         }
     }
+}
 
     @SuppressLint("CommitPrefEdits", "LaunchActivityFromNotification")
     private fun showCustomNotification(args: HashMap<*, *>): String {
