@@ -21,7 +21,7 @@ class Window(
     private val context: Context
 ) {
     private val mView: View
-    private var mParams: WindowManager.LayoutParams? = null
+    private val mParams: WindowManager.LayoutParams
     private val mWindowManager: WindowManager
     private val layoutInflater: LayoutInflater
     private var mPinLockView: PinLockView? = null
@@ -52,13 +52,13 @@ class Window(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         )
 
         layoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         mView = layoutInflater.inflate(R.layout.pin_activity, null)
-        mParams!!.gravity = Gravity.CENTER
+        mParams.gravity = Gravity.CENTER
         mWindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
         mPinLockView = mView.findViewById(R.id.pin_lock_view)
@@ -67,8 +67,8 @@ class Window(
 
         mPinLockView!!.attachIndicatorDots(mIndicatorDots)
         mPinLockView!!.setPinLockListener(mPinLockListener)
-        mPinLockView!!.pinLength = 6
-        mPinLockView!!.textColor = ContextCompat.getColor(context, R.color.ic_launcher_background)
+        mPinLockView!!.pinLength = 4
+        mPinLockView!!.textColor = ContextCompat.getColor(context, R.color.black)
         mIndicatorDots!!.indicatorType = IndicatorDots.IndicatorType.FILL_WITH_ANIMATION
 
         println("Window: Initialization complete")
@@ -76,9 +76,11 @@ class Window(
 
     fun open() {
         try {
-            if (mView.windowToken == null && mView.parent == null) {
+            if (!isOpen()) {
                 println("Window: Opening window")
-                mWindowManager.addView(mView, mParams)
+                Handler(Looper.getMainLooper()).post {
+                    mWindowManager.addView(mView, mParams)
+                }
             } else {
                 println("Window: Window is already open")
             }
@@ -91,15 +93,14 @@ class Window(
     fun close() {
         try {
             println("Window: Closing window")
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (mView.windowToken != null && mView.parent != null) {
-                    (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).removeView(mView)
-                    mView.invalidate()
+            Handler(Looper.getMainLooper()).post {
+                if (isOpen()) {
+                    mWindowManager.removeView(mView)
                     println("Window: Window closed")
                 } else {
                     println("Window: View not attached to window, skipping removal")
                 }
-            }, 500)
+            }
         } catch (e: Exception) {
             println("Window: Failed to close window")
             e.printStackTrace()
@@ -107,7 +108,7 @@ class Window(
     }
 
     fun isOpen(): Boolean {
-        val open = (mView.windowToken != null && mView.parent != null)
+        val open = mView.windowToken != null && mView.parent != null
         println("Window: isOpen() - $open")
         return open
     }

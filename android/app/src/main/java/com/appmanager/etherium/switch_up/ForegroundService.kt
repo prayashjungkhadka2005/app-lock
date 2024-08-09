@@ -8,7 +8,6 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import com.example.gobbl.HomeWatcher
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -49,20 +48,12 @@ class ForegroundService : Service() {
         mHomeWatcher.setOnHomePressedListener(object : HomeWatcher.OnHomePressedListener {
             override fun onHomePressed() {
                 println("ForegroundService: Home button pressed")
-                currentAppActivityList.clear()
-                if (window.isOpen()) {
-                    println("ForegroundService: Closing window due to home button press")
-                    window.close()
-                }
+                closeWindow()
             }
 
             override fun onHomeLongPressed() {
                 println("ForegroundService: Recent apps button pressed")
-                currentAppActivityList.clear()
-                if (window.isOpen()) {
-                    println("ForegroundService: Closing window due to recent apps button press")
-                    window.close()
-                }
+                closeWindow()
             }
         })
         mHomeWatcher.startWatch()
@@ -87,48 +78,55 @@ class ForegroundService : Service() {
         }, 0, 500)
     }
 
-   private fun monitorForegroundApp() {
-    println("ForegroundService: Monitoring foreground apps")
-    
-    val saveAppData: SharedPreferences = getSharedPreferences("save_app_data", Context.MODE_PRIVATE)
-    val lockedAppList = saveAppData.getString("app_data", "AppList")!!
-        .replace("[", "")
-        .replace("]", "")
-        .split(",")
-        .map { it.trim() }
-    
-    val usageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
-    val time = System.currentTimeMillis()
-    val usageEvents = usageStatsManager.queryEvents(time - 10000, time) // Extended time window to 10 seconds
-    val event = UsageEvents.Event()
+    private fun monitorForegroundApp() {
+        println("ForegroundService: Monitoring foreground apps")
 
-    val runningForegroundApps = mutableListOf<String>()
+        val saveAppData: SharedPreferences = getSharedPreferences("save_app_data", Context.MODE_PRIVATE)
+        val lockedAppList = saveAppData.getString("app_data", "AppList")!!
+            .replace("[", "")
+            .replace("]", "")
+            .split(",")
+            .map { it.trim() }
 
-    println("ForegroundService: Checking locked apps: $lockedAppList")
+        val usageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
+        val time = System.currentTimeMillis()
+        val usageEvents = usageStatsManager.queryEvents(time - 10000, time) // Extended time window to 10 seconds
+        val event = UsageEvents.Event()
 
-    while (usageEvents.hasNextEvent()) {
-        usageEvents.getNextEvent(event)
+        val runningForegroundApps = mutableListOf<String>()
 
-        // Debugging: Log all events
-        println("Event: Package ${event.packageName}, EventType: ${event.eventType}, ClassName: ${event.className}")
+        println("ForegroundService: Checking locked apps: $lockedAppList")
 
-        // Check for resumed apps
-        if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED) {
-            runningForegroundApps.add(event.packageName)
+        while (usageEvents.hasNextEvent()) {
+            usageEvents.getNextEvent(event)
 
-            if (lockedAppList.contains(event.packageName)) {
-                println("ForegroundService: Locked app in foreground detected - ${event.packageName}")
-                if (!window.isOpen()) {
-                    Handler(Looper.getMainLooper()).post {
-                        println("ForegroundService: Attempting to open the lock screen for ${event.packageName}")
-                        window.open()
+            // Debugging: Log all events
+            println("Event: Package ${event.packageName}, EventType: ${event.eventType}, ClassName: ${event.className}")
+
+            // Check for resumed apps
+            if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED) {
+                runningForegroundApps.add(event.packageName)
+
+                if (lockedAppList.contains(event.packageName)) {
+                    println("ForegroundService: Locked app in foreground detected - ${event.packageName}")
+                    if (!window.isOpen()) {
+                        Handler(Looper.getMainLooper()).post {
+                            println("ForegroundService: Attempting to open the lock screen for ${event.packageName}")
+                            window.open()
+                        }
                     }
                 }
             }
         }
+
+        println("ForegroundService: Currently running foreground apps: $runningForegroundApps")
     }
 
-    println("ForegroundService: Currently running foreground apps: $runningForegroundApps")
-}
-
+    private fun closeWindow() {
+        if (window.isOpen()) {
+            println("ForegroundService: Closing window")
+            window.close()
+        }
+        currentAppActivityList.clear()
+    }
 }

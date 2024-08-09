@@ -45,16 +45,23 @@ class PinCodeActivity(
             // Example initialization if it was within an activity:
             // mPinLockView = findViewById(R.id.pin_lock_view)
             // mIndicatorDots = findViewById(R.id.indicator_dots)
-            
+
+            // Attach the IndicatorDots to the PinLockView
             mPinLockView!!.attachIndicatorDots(mIndicatorDots)
             mPinLockView!!.setPinLockListener(mPinLockListener)
             println("PinCodeActivity: PinLockView and IndicatorDots setup completed")
 
-            mPinLockView!!.pinLength = 6
-            mPinLockView!!.textColor = ContextCompat.getColor(context, R.color.ic_launcher_background)
+            // Set the pin length
+            mPinLockView!!.pinLength = 4  // Assuming the PIN length is 4 based on the image
+
+            // Set the text color of the PIN digits
+            mPinLockView!!.textColor = ContextCompat.getColor(context, R.color.black)  // Assuming black text color
+
+            // Set up the indicator dots with animation
             mIndicatorDots!!.indicatorType = IndicatorDots.IndicatorType.FILL_WITH_ANIMATION
+
             println("PinCodeActivity: PinLockView configuration completed")
-            
+
         } catch (e: Exception) {
             println("PinCodeActivity: Exception occurred during initialization")
             e.printStackTrace()
