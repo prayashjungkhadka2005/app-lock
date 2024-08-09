@@ -36,30 +36,6 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-<activity
-    android:name=".AuthActivity"
-    android:label=""
-    android:theme="@style/AppCompactTheme"
-    android:launchMode="singleTask"
-    android:taskAffinity=""
-    android:excludeFromRecents="true">
-</activity>
-
-
-
-       <activity
-    android:name="io.flutter.embedding.android.FlutterActivity"
-    android:exported="true"
-    android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
-    android:hardwareAccelerated="true"
-    android:windowSoftInputMode="adjustResize"
-    android:theme="@style/NormalTheme">
-</activity>
-
-        <service
-            android:name=".ForegroundService"
-            android:exported="true"
-            android:foregroundServiceType="connectedDevice"/>
 
         <receiver
             android:name=".BootUpReceiver"
@@ -72,15 +48,16 @@
             </intent-filter>
         </receiver>
 
+        <service
+            android:name=".ForegroundService"
+            android:exported="true"
+            android:foregroundServiceType="connectedDevice"/>
+
+        <activity android:name=".NativeActivity"/>
+
         <meta-data
             android:name="flutterEmbedding"
-            android:value="2"/>
+            android:value="2" />
+       
     </application>
-
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT"/>
-            <data android:mimeType="text/plain"/>
-        </intent>
-    </queries>
 </manifest>
