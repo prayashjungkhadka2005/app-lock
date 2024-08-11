@@ -18,97 +18,96 @@ class ForegroundService : Service() {
     private var timer: Timer = Timer()
     private lateinit var mHomeWatcher: HomeWatcher
     private lateinit var window: Window
+    private var isForeground = false
 
     override fun onBind(intent: Intent): IBinder? {
-        println("ForegroundService: onBind called")
         return null
     }
 
     override fun onCreate() {
         super.onCreate()
-        println("ForegroundService: onCreate called")
 
-        val channelId = "AppLock-10"
-        val channel = NotificationChannel(
-            channelId,
-            "Channel human readable title",
-            NotificationManager.IMPORTANCE_DEFAULT
-        )
-        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("")
-            .setContentText("").build()
-        startForeground(1, notification)
+        createNotificationChannel()
+        startForegroundService()
 
         window = Window(this)
-        mHomeWatcher = HomeWatcher(this)
-        mHomeWatcher.setOnHomePressedListener(object : HomeWatcher.OnHomePressedListener {
-            override fun onHomePressed() {
-                println("ForegroundService: Home button pressed")
-                closeWindow()
-            }
+        mHomeWatcher = HomeWatcher(this).apply {
+            setOnHomePressedListener(object : HomeWatcher.OnHomePressedListener {
+                override fun onHomePressed() {
+                    closeWindow()
+                }
 
-            override fun onHomeLongPressed() {
-                println("ForegroundService: Recent apps button pressed")
-                closeWindow()
-            }
-        })
+                override fun onHomeLongPressed() {
+                    closeWindow()
+                }
+            })
+        }
         mHomeWatcher.startWatch()
         startMonitoringApps()
     }
 
     override fun onDestroy() {
-        println("ForegroundService: onDestroy called")
+        super.onDestroy()
         timer.cancel()
         mHomeWatcher.stopWatch()
-        super.onDestroy()
     }
 
     private fun startMonitoringApps() {
-        println("ForegroundService: Starting to monitor apps")
         timer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 monitorForegroundApp()
             }
-        }, 0, 500)
+        }, 0, 200) // Check more frequently to catch app changes
     }
 
-   private fun monitorForegroundApp() {
-    val saveAppData: SharedPreferences = getSharedPreferences("save_app_data", Context.MODE_PRIVATE)
-    val lockedAppList = saveAppData.getString("app_data", "AppList")!!
-        .replace("[", "")
-        .replace("]", "")
-        .split(",")
-        .map { it.trim() }
+    private fun monitorForegroundApp() {
+        val saveAppData: SharedPreferences = getSharedPreferences("save_app_data", Context.MODE_PRIVATE)
+        val lockedAppList = saveAppData.getString("app_data", "[]")!!
+            .replace("[", "")
+            .replace("]", "")
+            .split(",")
+            .map { it.trim() }
 
-    val usageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
-    val time = System.currentTimeMillis()
-    val usageEvents = usageStatsManager.queryEvents(time - 5000, time)
-    val event = UsageEvents.Event()
+        val usageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
+        val time = System.currentTimeMillis()
+        val usageEvents = usageStatsManager.queryEvents(time - 2000, time)
+        val event = UsageEvents.Event()
 
-    while (usageEvents.hasNextEvent()) {
-        usageEvents.getNextEvent(event)
+        while (usageEvents.hasNextEvent()) {
+            usageEvents.getNextEvent(event)
 
-        if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED) {
-            if (lockedAppList.contains(event.packageName)) {
-                println("ForegroundService: Locked app opened - ${event.packageName}")
-                if (!window.isOpen()) {
-                    Handler(Looper.getMainLooper()).post {
-                        window.open()
+            if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED) {
+                if (lockedAppList.contains(event.packageName)) {
+                    if (!window.isOpen() || !isForeground) {
+                        isForeground = true
+                        Handler(Looper.getMainLooper()).post { window.open() }
                     }
+                } else if (window.isOpen()) {
+                    closeWindow()
+                    isForeground = false
                 }
-            } else if (window.isOpen()) {
-                println("ForegroundService: Unlocked app detected, closing lock screen")
-                closeWindow()
             }
         }
     }
-}
 
-
-   public fun closeWindow() {
-    if (window.isOpen()) {
-        window.close()
+    private fun createNotificationChannel() {
+        val channelId = "AppLock-10"
+        val channel = NotificationChannel(channelId, "App Lock", NotificationManager.IMPORTANCE_DEFAULT)
+        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
     }
-}
+
+    private fun startForegroundService() {
+        val notification = NotificationCompat.Builder(this, "AppLock-10")
+            .setContentTitle("App Lock Running")
+            .setContentText("Monitoring locked apps")
+            .build()
+        startForeground(1, notification)
+    }
+
+    fun closeWindow() {
+        if (window.isOpen()) {
+            window.close()
+        }
+        isForeground = false
+    }
 }
