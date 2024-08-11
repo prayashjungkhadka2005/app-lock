@@ -183,4 +183,10 @@ class MainActivity : FlutterActivity() {
             false
         }
     }
+    override fun onBackPressed() {
+    super.onBackPressed()
+    val foregroundService = ForegroundService()
+    foregroundService.closeWindow() // Close the lock view immediately on back press
+}
+
 }

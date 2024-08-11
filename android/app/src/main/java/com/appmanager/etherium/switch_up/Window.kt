@@ -41,7 +41,7 @@ class Window(
         }
 
         override fun onPinChange(pinLength: Int, intermediatePin: String) {
-            println("Window: onPinChange - PIN length: $pinLength, intermediate PIN: $intermediatePin")
+            println("Window: onPinChange - PIN length: $pinLength, Intermediate PIN: $intermediatePin")
         }
     }
 
@@ -52,7 +52,7 @@ class Window(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         )
 
@@ -75,10 +75,15 @@ class Window(
     }
 
     fun open() {
+    Handler(Looper.getMainLooper()).post {
         try {
-            if (mView.windowToken == null && mView.parent == null) {  // Check if the view is already added
+            if (mView.windowToken == null && mView.parent == null) {
                 println("Window: Opening window")
+                mView.visibility = View.VISIBLE
+                mParams!!.flags = mParams!!.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
                 mWindowManager.addView(mView, mParams)
+                mView.alpha = 0f
+                mView.animate().alpha(1f).setDuration(300).start()
             } else {
                 println("Window: Window is already open")
             }
@@ -87,22 +92,26 @@ class Window(
             e.printStackTrace()
         }
     }
+}
 
     fun close() {
-        try {
-            println("Window: Closing window")
-            Handler(Looper.getMainLooper()).postDelayed({
+        Handler(Looper.getMainLooper()).post {
+            try {
+                println("Window: Closing window")
                 if (mView.windowToken != null && mView.parent != null) {
-                    (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).removeView(mView)
-                    mView.invalidate()
-                    println("Window: Window closed")
+                    mView.animate().alpha(0f).setDuration(300).withEndAction {
+                        mWindowManager.removeView(mView)
+                        mView.visibility = View.GONE
+                        mView.invalidate()
+                        println("Window: Window closed")
+                    }.start()
                 } else {
                     println("Window: View not attached to window, skipping removal")
                 }
-            }, 500)
-        } catch (e: Exception) {
-            println("Window: Failed to close window")
-            e.printStackTrace()
+            } catch (e: Exception) {
+                println("Window: Failed to close window")
+                e.printStackTrace()
+            }
         }
     }
 

@@ -16,7 +16,6 @@ import java.util.*
 
 class ForegroundService : Service() {
     private var timer: Timer = Timer()
-    private var currentAppActivityList = arrayListOf<String>()
     private lateinit var mHomeWatcher: HomeWatcher
     private lateinit var window: Window
 
@@ -41,8 +40,6 @@ class ForegroundService : Service() {
             .setContentText("").build()
         startForeground(1, notification)
 
-        println("ForegroundService: Notification channel created and service started in foreground")
-
         window = Window(this)
         mHomeWatcher = HomeWatcher(this)
         mHomeWatcher.setOnHomePressedListener(object : HomeWatcher.OnHomePressedListener {
@@ -57,7 +54,6 @@ class ForegroundService : Service() {
             }
         })
         mHomeWatcher.startWatch()
-        println("ForegroundService: HomeWatcher started")
         startMonitoringApps()
     }
 
@@ -65,7 +61,6 @@ class ForegroundService : Service() {
         println("ForegroundService: onDestroy called")
         timer.cancel()
         mHomeWatcher.stopWatch()
-        println("ForegroundService: Timer canceled and HomeWatcher stopped")
         super.onDestroy()
     }
 
@@ -78,55 +73,42 @@ class ForegroundService : Service() {
         }, 0, 500)
     }
 
-    private fun monitorForegroundApp() {
-        println("ForegroundService: Monitoring foreground apps")
+   private fun monitorForegroundApp() {
+    val saveAppData: SharedPreferences = getSharedPreferences("save_app_data", Context.MODE_PRIVATE)
+    val lockedAppList = saveAppData.getString("app_data", "AppList")!!
+        .replace("[", "")
+        .replace("]", "")
+        .split(",")
+        .map { it.trim() }
 
-        val saveAppData: SharedPreferences = getSharedPreferences("save_app_data", Context.MODE_PRIVATE)
-        val lockedAppList = saveAppData.getString("app_data", "AppList")!!
-            .replace("[", "")
-            .replace("]", "")
-            .split(",")
-            .map { it.trim() }
+    val usageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
+    val time = System.currentTimeMillis()
+    val usageEvents = usageStatsManager.queryEvents(time - 5000, time)
+    val event = UsageEvents.Event()
 
-        val usageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
-        val time = System.currentTimeMillis()
-        val usageEvents = usageStatsManager.queryEvents(time - 10000, time) // Extended time window to 10 seconds
-        val event = UsageEvents.Event()
+    while (usageEvents.hasNextEvent()) {
+        usageEvents.getNextEvent(event)
 
-        val runningForegroundApps = mutableListOf<String>()
-
-        println("ForegroundService: Checking locked apps: $lockedAppList")
-
-        while (usageEvents.hasNextEvent()) {
-            usageEvents.getNextEvent(event)
-
-            // Debugging: Log all events
-            println("Event: Package ${event.packageName}, EventType: ${event.eventType}, ClassName: ${event.className}")
-
-            // Check for resumed apps
-            if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED) {
-                runningForegroundApps.add(event.packageName)
-
-                if (lockedAppList.contains(event.packageName)) {
-                    println("ForegroundService: Locked app in foreground detected - ${event.packageName}")
-                    if (!window.isOpen()) {
-                        Handler(Looper.getMainLooper()).post {
-                            println("ForegroundService: Attempting to open the lock screen for ${event.packageName}")
-                            window.open()
-                        }
+        if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED) {
+            if (lockedAppList.contains(event.packageName)) {
+                println("ForegroundService: Locked app opened - ${event.packageName}")
+                if (!window.isOpen()) {
+                    Handler(Looper.getMainLooper()).post {
+                        window.open()
                     }
                 }
+            } else if (window.isOpen()) {
+                println("ForegroundService: Unlocked app detected, closing lock screen")
+                closeWindow()
             }
         }
-
-        println("ForegroundService: Currently running foreground apps: $runningForegroundApps")
     }
+}
 
-    private fun closeWindow() {
-        if (window.isOpen()) {
-            println("ForegroundService: Closing window")
-            window.close()
-        }
-        currentAppActivityList.clear()
+
+   public fun closeWindow() {
+    if (window.isOpen()) {
+        window.close()
     }
+}
 }
