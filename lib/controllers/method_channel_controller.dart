@@ -40,28 +40,29 @@ class MethodChannelController extends GetxController implements GetxService {
     return isUsageStatPermissionGiven;
   }
 
-  addToLockedAppsMethod() async {
+  Future<void> addToLockedAppsMethod() async {
     // Collects app data from AppsController
     try {
-      Map<String, dynamic> data = {
-        "app_list": Get.find<AppsController>().lockList.map((e) {
-          return {
-            "app_name": e.application!.appName,
-            "package_name": e.application!.packageName,
-            "file_path": e.application!.apkFilePath,
-          };
-        }).toList()
-      };
-      
-      await platform.invokeMethod('addToLockedApps', data).then((value) {
-        log("$value", name: "addToLockedApps CALLED");
+      List<Map<String, String>> lockedApps = Get.find<AppsController>()
+          .lockList
+          .map((e) => {
+                "app_name": e.application!.appName,
+                "package_name": e.application!.packageName,
+                "file_path": e.application!.apkFilePath,
+              })
+          .toList();
+
+      Map<String, dynamic> data = {"app_list": lockedApps};
+
+      await platform.invokeMethod('updateLockedApps', data).then((value) {
+        log("$value", name: "updateLockedApps CALLED");
       });
     } on PlatformException catch (e) {
       log("Failed to Invoke: '${e.message}'.");
     }
   }
 
-  Future stopForeground() async {
+  Future<void> stopForeground() async {
     try {
       await platform.invokeMethod('stopForeground', "").then((value) {
         log("$value", name: "stopForeground CALLED");

@@ -1,3 +1,4 @@
+import 'package:bbl_security/AppsScreen.dart';
 import 'package:bbl_security/LoginScreen.dart';
 import 'package:bbl_security/home.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,7 @@ class _SplashPageState extends State<SplashPage> {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                const LoginScreen(),
+                LoginScreen(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               const begin = Offset(0.0, 1.0);

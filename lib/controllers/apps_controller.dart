@@ -111,18 +111,14 @@ class AppsController extends GetxController implements GetxService {
     }
     addToAppsLoading = false;
     update();
+    displayLatestLockedApps();
   }
 
   addToLockedApps(Application app, context) async {
     addToAppsLoading = true;
     update([addRemoveToUnlockUpdate]);
     try {
-      if (selectLockList.contains(app.appName)) {
-        selectLockList.remove(app.appName);
-        lockList.removeWhere((em) => em.application!.appName == app.appName);
-        log("REMOVE: $selectLockList",
-            name: "addToLockedApps"); // Ensure this line is executed
-      } else {
+      if (!selectLockList.contains(app.appName)) {
         if (lockList.length < 16) {
           selectLockList.add(app.appName);
           lockList.add(
@@ -159,6 +155,26 @@ class AppsController extends GetxController implements GetxService {
     update([addRemoveToUnlockUpdate]);
   }
 
+  removeFromLockedApps(Application app, context) async {
+    addToAppsLoading = true;
+    update([addRemoveToUnlockUpdate]);
+    try {
+      if (selectLockList.contains(app.appName)) {
+        selectLockList.remove(app.appName);
+        lockList.removeWhere((em) => em.application!.appName == app.appName);
+        log("REMOVE: $selectLockList",
+            name: "removeFromLockedApps"); // Ensure this line is executed
+      }
+    } catch (e) {
+      log("-------$e", name: "removeFromLockedApps");
+    }
+    await prefs.setString(
+        AppConstants.lockedApps, bblDataModelToJson(lockList));
+    addToAppsLoading = false;
+    update([addRemoveToUnlockUpdate]);
+    displayLatestLockedApps(); // Display the updated locked apps list
+  }
+
   getLockedApps() {
     try {
       lockList =
@@ -181,5 +197,18 @@ class AppsController extends GetxController implements GetxService {
       return appName == element.appName;
     })] as ApplicationWithIcon)
         .icon;
+  }
+
+  void displayLatestLockedApps() {
+    // Function to log and potentially display the current locked apps list
+    log("Latest Locked Apps: ${lockList.map((e) => e.application!.appName).toList()}",
+        name: "displayLatestLockedApps");
+
+    // Optionally show a toast or update UI if needed
+    Fluttertoast.showToast(
+        msg: "Updated Locked Apps: ${lockList.length} apps",
+        toastLength: Toast.LENGTH_SHORT);
+
+    // Additional logic to update any relevant UI or components
   }
 }

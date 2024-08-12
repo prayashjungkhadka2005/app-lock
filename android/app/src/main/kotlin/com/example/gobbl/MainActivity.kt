@@ -20,7 +20,7 @@ import io.flutter.plugins.GeneratedPluginRegistrant
 class MainActivity : FlutterActivity() {
     private val channel = "flutter.native/helper"
     private var appInfo: List<ApplicationInfo>? = null
-    private var lockedAppList: List<ApplicationInfo> = emptyList()
+    private var lockedAppList: MutableList<ApplicationInfo> = mutableListOf()
     private var saveAppData: SharedPreferences? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,11 +40,11 @@ class MainActivity : FlutterActivity() {
         MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, channel).setMethodCallHandler { call, result ->
             Log.d("MainActivity", "MethodChannel called with method: ${call.method}")
             when (call.method) {
-                "addToLockedApps" -> {
+                "updateLockedApps" -> {
                     val args = call.arguments as HashMap<*, *>
-                    Log.d("MainActivity", "addToLockedApps called with args: $args")
-                    val greetings = showCustomNotification(args)
-                    result.success(greetings)
+                    Log.d("MainActivity", "updateLockedApps called with args: $args")
+                    val response = updateLockedApps(args)
+                    result.success(response)
                 }
                 "checkOverlayPermission" -> {
                     Log.d("MainActivity", "checkOverlayPermission called")
@@ -71,22 +71,20 @@ class MainActivity : FlutterActivity() {
     }
 
     @SuppressLint("CommitPrefEdits", "LaunchActivityFromNotification")
-    private fun showCustomNotification(args: HashMap<*, *>): String {
-        Log.d("MainActivity", "showCustomNotification called with args: $args")
+    private fun updateLockedApps(args: HashMap<*, *>): String {
+        Log.d("MainActivity", "updateLockedApps called with args: $args")
 
-        lockedAppList = emptyList()
+        lockedAppList.clear()
         appInfo = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
 
         val arr: ArrayList<Map<String, *>> = args["app_list"] as ArrayList<Map<String, *>>
 
         for (element in arr) {
-            run breaking@{
-                for (i in appInfo!!.indices) {
-                    if (appInfo!![i].packageName == element["package_name"].toString()) {
-                        Log.d("MainActivity", "App found and added to lockedAppList: ${appInfo!![i].packageName}")
-                        lockedAppList = lockedAppList + appInfo!![i]
-                        return@breaking
-                    }
+            for (app in appInfo!!) {
+                if (app.packageName == element["package_name"].toString()) {
+                    Log.d("MainActivity", "App found and added to lockedAppList: ${app.packageName}")
+                    lockedAppList.add(app)
+                    break
                 }
             }
         }
@@ -94,10 +92,9 @@ class MainActivity : FlutterActivity() {
         val packageData: List<String> = lockedAppList.map { it.packageName }
 
         val editor: SharedPreferences.Editor = saveAppData!!.edit()
-        editor.remove("app_data")
-        editor.putString("app_data", "$packageData")
+        editor.putString("app_data", packageData.joinToString(","))
         editor.apply()
-        Log.d("MainActivity", "Locked apps saved: $packageData")
+        Log.d("MainActivity", "Locked apps updated: $packageData")
 
         startForegroundService()
 

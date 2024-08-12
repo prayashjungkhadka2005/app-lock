@@ -62,11 +62,7 @@ class ForegroundService : Service() {
 
     private fun monitorForegroundApp() {
         val saveAppData: SharedPreferences = getSharedPreferences("save_app_data", Context.MODE_PRIVATE)
-        val lockedAppList = saveAppData.getString("app_data", "[]")!!
-            .replace("[", "")
-            .replace("]", "")
-            .split(",")
-            .map { it.trim() }
+        val lockedAppList = saveAppData.getString("app_data", "")!!.split(",").map { it.trim() }
 
         val usageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
         val time = System.currentTimeMillis()

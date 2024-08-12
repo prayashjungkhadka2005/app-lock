@@ -35,7 +35,6 @@ class _AppsScreenState extends State<AppsScreen> {
       await Get.find<PermissionController>()
           .getPermission(Permission.ignoreBatteryOptimizations);
       await getPermissions();
-      Get.find<MethodChannelController>().addToLockedAppsMethod();
       setState(() {
         isLoading = false;
       });
@@ -135,9 +134,20 @@ class _AppsScreenState extends State<AppsScreen> {
                                       borderRadius: 30.0,
                                       padding: 2.0,
                                       showOnOff: false,
-                                      onToggle: (val) {
-                                        appsController.addToLockedApps(
-                                            app, context);
+                                      onToggle: (val) async {
+                                        if (val) {
+                                          // Add app to locked list
+                                          await appsController.addToLockedApps(
+                                              app, context);
+                                        } else {
+                                          // Remove app from locked list
+                                          await appsController
+                                              .removeFromLockedApps(
+                                                  app, context);
+                                        }
+                                        // Synchronize with native side after updating the list
+                                        Get.find<MethodChannelController>()
+                                            .addToLockedAppsMethod();
                                       },
                                     ),
                                   ),
