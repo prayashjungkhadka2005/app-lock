@@ -11,11 +11,11 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.WindowManager
+import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
-import androidx.core.content.ContextCompat
 
 class MainActivity : FlutterActivity() {
     private val channel = "flutter.native/helper"
@@ -45,14 +45,6 @@ class MainActivity : FlutterActivity() {
                     Log.d("MainActivity", "addToLockedApps called with args: $args")
                     val greetings = showCustomNotification(args)
                     result.success(greetings)
-                }
-                "setPasswordInNative" -> {
-                    val args = call.arguments
-                    Log.d("MainActivity", "setPasswordInNative called with args: $args")
-                    val editor: SharedPreferences.Editor = saveAppData!!.edit()
-                    editor.putString("password", "$args")
-                    editor.apply()
-                    result.success("Success")
                 }
                 "checkOverlayPermission" -> {
                     Log.d("MainActivity", "checkOverlayPermission called")

@@ -16,6 +16,7 @@ import com.andrognito.pinlockview.IndicatorDots
 import com.andrognito.pinlockview.PinLockListener
 import com.andrognito.pinlockview.PinLockView
 
+
 @SuppressLint("InflateParams")
 class Window(private val context: Context) {
     private val mView: View
@@ -68,25 +69,32 @@ class Window(private val context: Context) {
         mPinLockView!!.textColor = ContextCompat.getColor(context, R.color.black)
         mIndicatorDots!!.indicatorType = IndicatorDots.IndicatorType.FILL_WITH_ANIMATION
     }
-
-    @Synchronized
-    fun open() {
-        Handler(Looper.getMainLooper()).post {
-            val currentTime = System.currentTimeMillis()
-            if (!isOpen() && (currentTime - lastOpenTime) > debounceDelay) {
-                lastOpenTime = currentTime
-                try {
-                    if (mView.parent == null) {
-                        mWindowManager.addView(mView, mParams)
-                    }
-                    mView.visibility = View.VISIBLE
-                    isViewAttached = true
-                } catch (e: Exception) {
-                    e.printStackTrace()
+@Synchronized
+fun open() {
+    Handler(Looper.getMainLooper()).post {
+        val currentTime = System.currentTimeMillis()
+        if (!isOpen() && (currentTime - lastOpenTime) > debounceDelay) {
+            lastOpenTime = currentTime
+            try {
+                if (mView.parent == null) {
+                    mWindowManager.addView(mView, mParams)
                 }
+                // Reset the PinLockView to clear any previously entered digits
+                mPinLockView!!.resetPinLockView()
+
+                // Hide the error message
+                txtView!!.visibility = View.GONE
+
+                mView.visibility = View.VISIBLE
+                isViewAttached = true
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
+}
+
+
 
     @Synchronized
     fun close() {
@@ -106,15 +114,30 @@ class Window(private val context: Context) {
     fun isOpen(): Boolean {
         return isViewAttached
     }
+private fun validatePinCode() {
+    // Access the SharedPreferences where the PIN is stored, using the correct file name
+    val sharedPreferences: SharedPreferences = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+    
+    // Retrieve the PIN using the correct key with the "flutter." prefix
+    val savedPin = sharedPreferences.getString("flutter.user_pin", null)
+    
+    // Print the value of the saved PIN to check if it has a value
+    println("Saved PIN: $savedPin")
 
-    private fun validatePinCode() {
-        val saveAppData: SharedPreferences = context.getSharedPreferences("save_app_data", Context.MODE_PRIVATE)
-        val savedPin = saveAppData.getString("password", "") ?: ""
+    if (savedPin == null) {
+        // Handle the case where no PIN is registered
+        txtView!!.visibility = View.VISIBLE  // Show an error message indicating no PIN is set
+        txtView!!.text = "No PIN registered. Please set up a PIN."
+        mPinLockView!!.resetPinLockView()
+    } else {
         if (pinCode == savedPin) {
-            close()
+            close()  // Close the PIN entry window if the PIN is correct
         } else {
-            txtView!!.visibility = View.VISIBLE
-            mPinLockView!!.resetPinLockView()
+            txtView!!.visibility = View.VISIBLE  // Show an error message if the PIN is incorrect
+            txtView!!.text = "Incorrect PIN. Please try again."
+            mPinLockView!!.resetPinLockView()  // Reset the PIN entry view
         }
     }
+}
+
 }

@@ -13,7 +13,6 @@ class AppsController extends GetxController implements GetxService {
   SharedPreferences prefs;
   AppsController({required this.prefs});
 
-  // String? dummyPasscode;
   int? selectQuestion;
   TextEditingController typeAnswer = TextEditingController();
   TextEditingController checkAnswer = TextEditingController();
@@ -42,20 +41,6 @@ class AppsController extends GetxController implements GetxService {
     selectQuestion = null;
     typeAnswer.clear();
     checkAnswer.clear();
-  }
-
-  savePasscode(counter) {
-    prefs.setString(AppConstants.setPassCode, counter);
-    Get.find<MethodChannelController>().setPassword();
-    log("${prefs.getString(AppConstants.setPassCode)}", name: "save passcode");
-  }
-
-  getPasscode() {
-    return prefs.getString(AppConstants.setPassCode) ?? "";
-  }
-
-  removePasscode() {
-    return prefs.remove(AppConstants.setPassCode);
   }
 
   setSplash() {

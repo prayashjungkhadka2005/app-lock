@@ -5,7 +5,6 @@ import 'package:get/state_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bbl_security/controllers/apps_controller.dart';
-import 'package:bbl_security/services/constants.dart';
 import 'package:usage_stats/usage_stats.dart';
 
 import 'permission_controller.dart';
@@ -42,7 +41,7 @@ class MethodChannelController extends GetxController implements GetxService {
   }
 
   addToLockedAppsMethod() async {
-    // collects app data from AppsController
+    // Collects app data from AppsController
     try {
       Map<String, dynamic> data = {
         "app_list": Get.find<AppsController>().lockList.map((e) {
@@ -53,26 +52,10 @@ class MethodChannelController extends GetxController implements GetxService {
           };
         }).toList()
       };
-      await setPassword();
+      
       await platform.invokeMethod('addToLockedApps', data).then((value) {
         log("$value", name: "addToLockedApps CALLED");
       });
-    } on PlatformException catch (e) {
-      log("Failed to Invoke: '${e.message}'.");
-    }
-  }
-
-  Future setPassword() async {
-    // Retrieves the passcode from SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
-    try {
-      String data = prefs.getString(AppConstants.setPassCode) ?? "";
-      log(data, name: "PASSWORD--");
-      if (data != "") {
-        await platform.invokeMethod('setPasswordInNative', data).then((value) {
-          log("$value", name: "setPasswordInNative CALLED");
-        });
-      }
     } on PlatformException catch (e) {
       log("Failed to Invoke: '${e.message}'.");
     }

@@ -563,26 +563,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-class OtpScreen extends StatelessWidget {
-  final String email;
-
-  const OtpScreen(
-      {Key? key,
-      required this.email,
-      required String country,
-      required String password})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text('OTP Screen for $email'),
-      ),
-    );
-  }
-}
-
 class ForgotPasswordScreen extends StatelessWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
 
