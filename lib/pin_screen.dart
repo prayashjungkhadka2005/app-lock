@@ -72,96 +72,76 @@ class _PinScreenState extends State<PinScreen> {
     });
   }
 
+  Future<void> _sendPinToServer(String pin) async {
+    final url = 'http://192.168.1.79:3000/setPin';
 
-Future<void> _sendPinToServer(String pin) async {
-  final url = 'http://192.168.1.79:3000/setPin';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'useremail': widget.useremail,
+          'pin': pin,
+        }),
+      );
 
-  try {
-    final response = await http.post(
-      Uri.parse(url),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'useremail': widget.useremail,
-        'pin': pin,
-      }),
-    );
+      if (response.statusCode == 201) {
+        final responseBody = jsonDecode(response.body);
+        final successMessage =
+            responseBody['message'] ?? 'PIN setup successfully!';
 
-    if (response.statusCode == 201) {
-      final responseBody = jsonDecode(response.body);
-      final successMessage = responseBody['message'] ?? 'PIN setup successfully!';
+        final prefs = await SharedPreferences.getInstance();
 
-      // Save PIN to SharedPreferences using the default file
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Ensure the operation is completed before moving forward
-      bool success = await prefs.setString('user_pin', pin);
-      
-      // Check if the PIN was successfully stored
-      if (success) {
-        final storedPin = prefs.getString('user_pin');
-        print('Stored PIN: $storedPin');
+        // Store the PIN and mark the PIN setup as complete
+        bool success = await prefs.setString('user_pin', pin);
+        await prefs.setBool(
+            'isPinSetupComplete', true); // Flag for PIN setup completion
 
-        if (storedPin == pin) {
-          print('PIN was stored successfully');
-        } else {
-          print('Failed to store PIN');
-        }
-
-        // Optionally show the stored PIN in a SnackBar for testing
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Stored PIN: $storedPin'),
-              duration: const Duration(seconds: 2),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(successMessage),
-              duration: const Duration(seconds: 2),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-
-          Future.delayed(const Duration(seconds: 2), () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => AppsScreen()),
+        if (success) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(successMessage),
+                duration: const Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+              ),
             );
-          });
+
+            Future.delayed(const Duration(seconds: 2), () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => AppsScreen()),
+              );
+            });
+          }
+        } else {
+          print('Failed to commit the PIN to SharedPreferences');
         }
       } else {
-        print('Failed to commit the PIN to SharedPreferences');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Failed to send PIN to server.'),
+              duration: const Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
-    } else {
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Failed to send PIN to server.'),
+            content: const Text('An error occurred.'),
             duration: const Duration(seconds: 2),
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     }
-  } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('An error occurred.'),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
   }
-}
 
   @override
   Widget build(BuildContext context) {

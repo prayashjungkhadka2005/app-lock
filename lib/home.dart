@@ -1,10 +1,11 @@
 import 'package:bbl_security/AppsScreen.dart';
+import 'package:bbl_security/LoginScreen.dart'; // Import your login screen
 import 'package:bbl_security/controllers/apps_controller.dart';
 import 'package:bbl_security/controllers/method_channel_controller.dart';
-import 'package:bbl_security/controllers/permission_controller.dart';
 import 'package:bbl_security/widgets/permission_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -27,17 +28,23 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      await Get.find<AppsController>().getAppsData();
-      await Get.find<AppsController>().getLockedApps();
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      bool isPinSetupComplete = prefs.getBool('isPinSetupComplete') ?? false;
+      print('PIN setup complete status: $isPinSetupComplete');
+      if (isPinSetupComplete) {
+        await Get.find<AppsController>().getAppsData();
+        await Get.find<AppsController>().getLockedApps();
+        await getPermissions();
+        Get.find<MethodChannelController>().addToLockedAppsMethod();
 
-      // Now, move the battery optimization permission request to the permission dialog instead of requesting it here.
-      await getPermissions();
-      Get.find<MethodChannelController>().addToLockedAppsMethod();
-
-      // Navigate to AppsScreen without 'const'
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => AppsScreen()),
-      );
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => AppsScreen()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
+      }
     });
   }
 

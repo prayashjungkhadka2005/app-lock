@@ -1,12 +1,12 @@
 import 'package:html/parser.dart';
 
 class AppConstants {
-
   static const String setPassCode = "setPasscode";
   static const String saveQa = "saveQa";
 
   static const String appName = 'BBL Security';
   static const int appVersion = 1;
+  static const String installedApps = 'installed_apps';
 
   // Shared Key
   static const String token = 'user_app_token';

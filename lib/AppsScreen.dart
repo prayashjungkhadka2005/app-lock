@@ -6,7 +6,6 @@ import 'package:device_apps/device_apps.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../controllers/apps_controller.dart';
 import '../controllers/method_channel_controller.dart';
-import '../controllers/permission_controller.dart';
 import '../widgets/permission_dialog.dart';
 
 class AppsScreen extends StatefulWidget {
@@ -26,28 +25,27 @@ class _AppsScreenState extends State<AppsScreen> {
     }
   }
 
-@override
-void initState() {
-  super.initState();
-  WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-    // Start all async operations simultaneously
-    final getAppDataFuture = Get.find<AppsController>().getAppsData();
-    final getLockedAppsFuture = Get.find<AppsController>().getLockedApps();
-    final getPermissionsFuture = getPermissions();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      // Start all async operations simultaneously
+      final getAppDataFuture = Get.find<AppsController>().getAppsData();
+      final getLockedAppsFuture = Get.find<AppsController>().getLockedApps();
+      final getPermissionsFuture = getPermissions();
 
-    // Await them all at once with explicit type
-    await Future.wait<void>([
-      getAppDataFuture,
-      getLockedAppsFuture,
-      getPermissionsFuture,
-    ]);
+      // Await them all at once with explicit type
+      await Future.wait<void>([
+        getAppDataFuture,
+        getLockedAppsFuture,
+        getPermissionsFuture,
+      ]);
 
-    setState(() {
-      isLoading = false;
+      setState(() {
+        isLoading = false;
+      });
     });
-  });
-}
-
+  }
 
   Widget buildIcon(Application app) {
     return FutureBuilder<Uint8List?>(
@@ -117,6 +115,13 @@ void initState() {
                     child: GetBuilder<AppsController>(
                       id: Get.find<AppsController>().addRemoveToUnlockUpdate,
                       builder: (appsController) {
+                        // Sort the apps list alphabetically
+                        appsController.unLockList.sort(
+                          (a, b) => a.appName
+                              .toLowerCase()
+                              .compareTo(b.appName.toLowerCase()),
+                        );
+
                         return ListView.builder(
                           itemCount: appsController.unLockList.length,
                           itemBuilder: (context, index) {

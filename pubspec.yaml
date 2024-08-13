@@ -36,6 +36,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_switch: ^0.3.2
+  collection: ^1.16.0
   
   
 
