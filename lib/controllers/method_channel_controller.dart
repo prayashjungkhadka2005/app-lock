@@ -14,6 +14,7 @@ class MethodChannelController extends GetxController implements GetxService {
 
   bool isOverlayPermissionGiven = false;
   bool isUsageStatPermissionGiven = false;
+  bool isBatteryOptimizationIgnored = false; // New field
 
   Future<bool> checkOverlayPermission() async {
     try {
@@ -38,6 +39,13 @@ class MethodChannelController extends GetxController implements GetxService {
         (await UsageStats.checkUsagePermission() ?? false);
     update();
     return isUsageStatPermissionGiven;
+  }
+
+  Future<bool> checkBatteryOptimizationPermission() async {
+    isBatteryOptimizationIgnored =
+        await Permission.ignoreBatteryOptimizations.isGranted;
+    update();
+    return isBatteryOptimizationIgnored;
   }
 
   Future<void> addToLockedAppsMethod() async {
@@ -92,11 +100,21 @@ class MethodChannelController extends GetxController implements GetxService {
           .invokeMethod('askUsageStatsPermission')
           .then((value) {
         log("$value", name: "askUsageStatsPermission");
-        return (value as bool);
+        isUsageStatPermissionGiven = (value as bool);
+        update();
+        return isUsageStatPermissionGiven;
       });
     } on PlatformException catch (e) {
       log("Failed to Invoke: '${e.message}'.");
       return false;
+    }
+  }
+
+  Future<void> askBatteryOptimizationPermission() async {
+    final status = await Permission.ignoreBatteryOptimizations.request();
+    if (status.isGranted) {
+      isBatteryOptimizationIgnored = true;
+      update(); // Trigger UI update
     }
   }
 }

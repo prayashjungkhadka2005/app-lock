@@ -4,7 +4,7 @@ import 'package:bbl_security/controllers/method_channel_controller.dart';
 import 'package:bbl_security/services/constants.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart'; // Allows showing toast messages for user feedback
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/bbl_model.dart';
@@ -16,17 +16,12 @@ class AppsController extends GetxController implements GetxService {
   int? selectQuestion;
   TextEditingController typeAnswer = TextEditingController();
   TextEditingController checkAnswer = TextEditingController();
-  List<Application> unLockList =
-      []; // list of installed applications that are not locked
-  List<BBLDataModel> lockList = []; // list of locked applications
-  List<String> selectLockList =
-      []; //list of app names currently selected for locking
-  bool addToAppsLoading =
-      false; // Indicates if an app is being added to or removed from the lock list
+  List<Application> unLockList = [];
+  List<BBLDataModel> lockList = [];
+  List<String> selectLockList = [];
+  bool addToAppsLoading = false;
 
-  List<String> excludedApps = [
-    "com.android.settings"
-  ]; //Apps that are excluded from being unlocked
+  List<String> excludedApps = ["com.android.settings"];
 
   int appSearchUpdate = 1;
   int addRemoveToUnlockUpdate = 2;
@@ -48,13 +43,9 @@ class AppsController extends GetxController implements GetxService {
     return prefs.getBool("Splash");
   }
 
-  getSplash() async {
+  Future<bool> getSplash() async {
     final prefs = await SharedPreferences.getInstance();
-    if ((prefs.getBool("Splash")) != null) {
-      return true;
-    } else {
-      return false;
-    }
+    return prefs.getBool("Splash") ?? false;
   }
 
   excludeApps() {
@@ -63,17 +54,21 @@ class AppsController extends GetxController implements GetxService {
     }
   }
 
-  getAppsData() async {
-    unLockList = await DeviceApps.getInstalledApplications(
-      includeAppIcons: true,
-      includeSystemApps: true,
-      onlyAppsWithLaunchIntent: true,
-    );
-    excludeApps();
+  Future<void> getAppsData() async {
+    try {
+      unLockList = await DeviceApps.getInstalledApplications(
+        includeAppIcons: true,
+        includeSystemApps: true,
+        onlyAppsWithLaunchIntent: true,
+      );
+      excludeApps();
+    } catch (e) {
+      log("Error fetching apps: $e", name: "getAppsData");
+    }
     update();
   }
 
-  addRemoveFromLockedApps(BBLData app) {
+  Future<void> addRemoveFromLockedApps(BBLData app) async {
     addToAppsLoading = true;
     update();
     try {
@@ -107,16 +102,18 @@ class AppsController extends GetxController implements GetxService {
         }
       }
     } catch (e) {
-      log("-------$e", name: "addRemoveFromLockedAppsFromSearch");
+      log("Error in addRemoveFromLockedApps: $e",
+          name: "addRemoveFromLockedApps");
     }
     addToAppsLoading = false;
     update();
     displayLatestLockedApps();
   }
 
-  addToLockedApps(Application app, context) async {
+  Future<void> addToLockedApps(Application app, BuildContext context) async {
     addToAppsLoading = true;
     update([addRemoveToUnlockUpdate]);
+
     try {
       if (!selectLockList.contains(app.appName)) {
         if (lockList.length < 16) {
@@ -138,8 +135,6 @@ class AppsController extends GetxController implements GetxService {
               ),
             ),
           );
-          log("ADD: $selectLockList",
-              name: "addToLockedApps"); // Ensure this line is executed
           Get.find<MethodChannelController>().addToLockedAppsMethod();
         } else {
           Fluttertoast.showToast(
@@ -147,68 +142,69 @@ class AppsController extends GetxController implements GetxService {
         }
       }
     } catch (e) {
-      log("-------$e", name: "addToLockedApps");
+      log("Error in addToLockedApps: $e", name: "addToLockedApps");
+    } finally {
+      await prefs.setString(
+          AppConstants.lockedApps, bblDataModelToJson(lockList));
+      addToAppsLoading = false;
+      update([addRemoveToUnlockUpdate]);
     }
-    await prefs.setString(
-        AppConstants.lockedApps, bblDataModelToJson(lockList));
-    addToAppsLoading = false;
-    update([addRemoveToUnlockUpdate]);
   }
 
-  removeFromLockedApps(Application app, context) async {
+  Future<void> removeFromLockedApps(
+      Application app, BuildContext context) async {
     addToAppsLoading = true;
     update([addRemoveToUnlockUpdate]);
+
     try {
       if (selectLockList.contains(app.appName)) {
         selectLockList.remove(app.appName);
         lockList.removeWhere((em) => em.application!.appName == app.appName);
-        log("REMOVE: $selectLockList",
-            name: "removeFromLockedApps"); // Ensure this line is executed
       }
     } catch (e) {
-      log("-------$e", name: "removeFromLockedApps");
+      log("Error in removeFromLockedApps: $e", name: "removeFromLockedApps");
+    } finally {
+      await prefs.setString(
+          AppConstants.lockedApps, bblDataModelToJson(lockList));
+      addToAppsLoading = false;
+      update([addRemoveToUnlockUpdate]);
+      displayLatestLockedApps();
     }
-    await prefs.setString(
-        AppConstants.lockedApps, bblDataModelToJson(lockList));
-    addToAppsLoading = false;
-    update([addRemoveToUnlockUpdate]);
-    displayLatestLockedApps(); // Display the updated locked apps list
   }
 
-  getLockedApps() {
+  Future<void> getLockedApps() async {
     try {
       lockList =
           bblDataModelFromJson(prefs.getString(AppConstants.lockedApps) ?? '');
       selectLockList.clear();
-      log('${lockList.length}', name: "STORED LIST");
       for (var e in lockList) {
         selectLockList.add(e.application!.appName);
       }
-      log('${lockList.length}-$selectLockList', name: "Locked Apps");
     } catch (e) {
-      log("-------$e", name: "getLockedApps");
+      log("Error in getLockedApps: $e", name: "getLockedApps");
     }
 
     update();
   }
 
   Uint8List getAppIcon(String appName) {
-    return (unLockList[unLockList.indexWhere((element) {
+    int index = unLockList.indexWhere((element) {
       return appName == element.appName;
-    })] as ApplicationWithIcon)
-        .icon;
+    });
+
+    if (index != -1 && unLockList[index] is ApplicationWithIcon) {
+      return (unLockList[index] as ApplicationWithIcon).icon;
+    } else {
+      return Uint8List(0);
+    }
   }
 
   void displayLatestLockedApps() {
-    // Function to log and potentially display the current locked apps list
     log("Latest Locked Apps: ${lockList.map((e) => e.application!.appName).toList()}",
         name: "displayLatestLockedApps");
 
-    // Optionally show a toast or update UI if needed
     Fluttertoast.showToast(
         msg: "Updated Locked Apps: ${lockList.length} apps",
         toastLength: Toast.LENGTH_SHORT);
-
-    // Additional logic to update any relevant UI or components
   }
 }

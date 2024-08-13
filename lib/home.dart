@@ -5,7 +5,6 @@ import 'package:bbl_security/controllers/permission_controller.dart';
 import 'package:bbl_security/widgets/permission_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -30,8 +29,8 @@ class _HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       await Get.find<AppsController>().getAppsData();
       await Get.find<AppsController>().getLockedApps();
-      await Get.find<PermissionController>()
-          .getPermission(Permission.ignoreBatteryOptimizations);
+
+      // Now, move the battery optimization permission request to the permission dialog instead of requesting it here.
       await getPermissions();
       Get.find<MethodChannelController>().addToLockedAppsMethod();
 

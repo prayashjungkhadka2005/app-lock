@@ -26,19 +26,45 @@ class _AppsScreenState extends State<AppsScreen> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      await Get.find<AppsController>().getAppsData();
-      await Get.find<AppsController>().getLockedApps();
-      await Get.find<PermissionController>()
-          .getPermission(Permission.ignoreBatteryOptimizations);
-      await getPermissions();
-      setState(() {
-        isLoading = false;
-      });
+@override
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+    // Start all async operations simultaneously
+    final getAppDataFuture = Get.find<AppsController>().getAppsData();
+    final getLockedAppsFuture = Get.find<AppsController>().getLockedApps();
+    final getPermissionsFuture = getPermissions();
+
+    // Await them all at once with explicit type
+    await Future.wait<void>([
+      getAppDataFuture,
+      getLockedAppsFuture,
+      getPermissionsFuture,
+    ]);
+
+    setState(() {
+      isLoading = false;
     });
+  });
+}
+
+
+  Widget buildIcon(Application app) {
+    return FutureBuilder<Uint8List?>(
+      future: Future.value(Get.find<AppsController>().getAppIcon(app.appName)),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Icon(Icons.android);
+        } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+          return CircleAvatar(
+            backgroundImage: MemoryImage(snapshot.data!),
+            backgroundColor: Theme.of(context).primaryColorDark,
+          );
+        } else {
+          return Icon(Icons.android);
+        }
+      },
+    );
   }
 
   @override
@@ -95,10 +121,6 @@ class _AppsScreenState extends State<AppsScreen> {
                           itemCount: appsController.unLockList.length,
                           itemBuilder: (context, index) {
                             Application app = appsController.unLockList[index];
-                            Uint8List? iconData;
-                            if (app is ApplicationWithIcon) {
-                              iconData = app.icon;
-                            }
 
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 5),
@@ -107,18 +129,10 @@ class _AppsScreenState extends State<AppsScreen> {
                                 margin: EdgeInsets.symmetric(vertical: 4),
                                 color: Colors.grey[200],
                                 child: ListTile(
-                                  leading: iconData != null
-                                      ? CircleAvatar(
-                                          backgroundImage:
-                                              MemoryImage(iconData),
-                                          backgroundColor: Theme.of(context)
-                                              .primaryColorDark,
-                                        )
-                                      : Icon(Icons.android),
+                                  leading: buildIcon(app),
                                   title: Text(app.appName),
                                   trailing: SizedBox(
-                                    width:
-                                        60, // Fixed width to accommodate the switch
+                                    width: 60,
                                     child: FlutterSwitch(
                                       width: 50.0,
                                       height: 25.0,
@@ -136,16 +150,13 @@ class _AppsScreenState extends State<AppsScreen> {
                                       showOnOff: false,
                                       onToggle: (val) async {
                                         if (val) {
-                                          // Add app to locked list
                                           await appsController.addToLockedApps(
                                               app, context);
                                         } else {
-                                          // Remove app from locked list
                                           await appsController
                                               .removeFromLockedApps(
                                                   app, context);
                                         }
-                                        // Synchronize with native side after updating the list
                                         Get.find<MethodChannelController>()
                                             .addToLockedAppsMethod();
                                       },

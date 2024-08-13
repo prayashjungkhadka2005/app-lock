@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/state_manager.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:bbl_security/controllers/method_channel_controller.dart';
 
-import '../services/constants.dart';
-
-askPermissionBottomSheet(context) {
-  return showModalBottomSheet(
+void askPermissionBottomSheet(BuildContext context) {
+  showModalBottomSheet(
     barrierColor: Colors.black.withOpacity(0.8),
     context: context,
     isDismissible: false,
@@ -22,48 +21,88 @@ askPermissionBottomSheet(context) {
 class AskPermissionBottomSheet extends StatelessWidget {
   const AskPermissionBottomSheet({Key? key}) : super(key: key);
 
-  Widget permissionWidget(context, name, bool permission) {
+  Widget permissionWidget(BuildContext context, String name, bool permission,
+      IconData icon, String description, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.symmetric(
         vertical: 6,
         horizontal: 6,
       ),
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.8,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: Theme.of(context).primaryColor,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 6,
-            vertical: 6,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                "$name",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w400,
-                  fontSize: 14,
-                ),
-              ),
-              const Spacer(),
-              Icon(
-                Icons.check_circle,
-                color: !permission
-                    ? Colors.grey[700]
-                    : Theme.of(context).primaryColor,
+      child: GestureDetector(
+        onTap: permission ? null : onTap,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.85,
+          decoration: BoxDecoration(
+            color: permission ? Colors.green[50] : Colors.red[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: permission ? Colors.green : Theme.of(context).primaryColor,
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                offset: Offset(0, 2),
+                blurRadius: 4,
               ),
             ],
+          ),
+          child: ListTile(
+            leading: Icon(icon,
+                color: permission ? Colors.green : Colors.red, size: 32),
+            title: Text(
+              name,
+              style: TextStyle(
+                color: permission
+                    ? Colors.green[800]
+                    : Theme.of(context).primaryColorDark,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            subtitle: Text(
+              description,
+              style: TextStyle(
+                color: permission ? Colors.green[600] : Colors.red[400],
+                fontSize: 14,
+              ),
+            ),
+            trailing: Icon(
+                permission ? Icons.check_circle : Icons.error_outline,
+                color: permission ? Colors.green : Colors.red,
+                size: 24),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> checkPermissions(MethodChannelController state) async {
+    await state.checkOverlayPermission();
+    await state.checkUsageStatePermission();
+    await state.checkBatteryOptimizationPermission();
+  }
+
+  Future<void> confirmPermissions(
+      BuildContext context, MethodChannelController state) async {
+    await checkPermissions(state);
+
+    if (!state.isOverlayPermissionGiven ||
+        !state.isUsageStatPermissionGiven ||
+        !state.isBatteryOptimizationIgnored) {
+      Fluttertoast.showToast(
+        msg: "Please grant all required permissions.",
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+    } else {
+      Navigator.pop(context);
+      Fluttertoast.showToast(
+        msg: "All permissions granted.",
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+      );
+    }
   }
 
   @override
@@ -80,8 +119,11 @@ class AskPermissionBottomSheet extends StatelessWidget {
           child: Container(
             width: size.width,
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColorDark,
-              borderRadius: BorderRadius.circular(10.0),
+              color: Colors.white,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
             ),
             child: GetBuilder<MethodChannelController>(builder: (state) {
               return SingleChildScrollView(
@@ -89,67 +131,81 @@ class AskPermissionBottomSheet extends StatelessWidget {
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 10,
+                        horizontal: 20,
+                        vertical: 20,
                       ),
                       child: Text(
-                        "AppLock needs system permissions to work with.",
+                        "To ensure the best experience, please grant the following permissions:",
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w400,
-                          fontSize: 16,
+                          color: Theme.of(context).primaryColorDark,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
                         ),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          if (!state.isOverlayPermissionGiven)
-                            GestureDetector(
-                              onTap: () {
-                                state.askOverlayPermission();
-                              },
-                              child: permissionWidget(
-                                context,
-                                "System overlay",
-                                state.isOverlayPermissionGiven,
-                              ),
-                            ),
-                          if (!state.isUsageStatPermissionGiven)
-                            GestureDetector(
-                              onTap: () {
-                                state.askUsageStatsPermission();
-                              },
-                              child: permissionWidget(
-                                context,
-                                "Usage access",
-                                state.isUsageStatPermissionGiven,
-                              ),
-                            )
-                        ],
-                      ),
-                    ),
-                    MaterialButton(
-                      color: Theme.of(context).primaryColor,
-                      onPressed: () async {
-                        if (await state.checkOverlayPermission() &&
-                            await state.checkUsageStatePermission()) {
-                          Navigator.pop(context);
-                        } else {
-                          Fluttertoast.showToast(
-                              msg: "Required permissions not given!");
+                    permissionWidget(
+                      context,
+                      "System Overlay",
+                      state.isOverlayPermissionGiven,
+                      Icons.visibility,
+                      "Allows the app to display over other apps.",
+                      () async {
+                        if (!state.isOverlayPermissionGiven) {
+                          await state.askOverlayPermission();
                         }
                       },
-                      child: Text(
-                        "Confirm",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w400,
-                          fontSize: 14,
+                    ),
+                    permissionWidget(
+                      context,
+                      "Usage Access",
+                      state.isUsageStatPermissionGiven,
+                      Icons.bar_chart,
+                      "Provides data on app usage statistics.",
+                      () async {
+                        if (!state.isUsageStatPermissionGiven) {
+                          await state.askUsageStatsPermission();
+                        }
+                      },
+                    ),
+                    permissionWidget(
+                      context,
+                      "Ignore Battery Optimizations",
+                      state.isBatteryOptimizationIgnored,
+                      Icons.battery_alert,
+                      "Prevents the app from being put to sleep.",
+                      () async {
+                        if (!state.isBatteryOptimizationIgnored) {
+                          await state.askBatteryOptimizationPermission();
+                        }
+                      },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 20,
+                        horizontal: 20,
+                      ),
+                      child: ElevatedButton.icon(
+                        icon: Icon(Icons.check, color: Colors.white),
+                        label: Text(
+                          "Confirm",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
                         ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 50, vertical: 15),
+                        ),
+                        onPressed: () async {
+                          await confirmPermissions(context, state);
+                        },
                       ),
                     ),
                   ],
