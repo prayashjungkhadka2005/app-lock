@@ -6,6 +6,8 @@ import 'package:country_picker/country_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:email_validator/email_validator.dart';
+import 'dart:io'; // Import for SocketException
+import 'package:fluttertoast/fluttertoast.dart'; // Import for FlutterToast
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -115,6 +117,15 @@ class LoginScreenState extends State<LoginScreen> {
         final responseBody = jsonDecode(response.body);
         showError(responseBody['message']);
       }
+    } on SocketException {
+      Fluttertoast.showToast(
+        msg: "No Internet Connection",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Color.fromARGB(253, 172, 170, 170),
+        fontSize: 16.0,
+      );
     } catch (e) {
       showError('Failed to register user: $e');
     }

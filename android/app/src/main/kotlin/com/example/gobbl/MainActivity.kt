@@ -12,12 +12,11 @@ import android.provider.Settings
 import android.util.Log
 import android.view.WindowManager
 import androidx.core.content.ContextCompat
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugins.GeneratedPluginRegistrant
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     private val channel = "flutter.native/helper"
     private var appInfo: List<ApplicationInfo>? = null
     private var lockedAppList: MutableList<ApplicationInfo> = mutableListOf()
@@ -33,11 +32,11 @@ class MainActivity : FlutterActivity() {
         )
         setTheme(R.style.AppCompactTheme)
         saveAppData = applicationContext.getSharedPreferences("save_app_data", Context.MODE_PRIVATE)
+    }
 
-        GeneratedPluginRegistrant.registerWith(FlutterEngine(this))
-        Log.d("MainActivity", "GeneratedPluginRegistrant registered")
-
-        MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, channel).setMethodCallHandler { call, result ->
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channel).setMethodCallHandler { call, result ->
             Log.d("MainActivity", "MethodChannel called with method: ${call.method}")
             when (call.method) {
                 "updateLockedApps" -> {

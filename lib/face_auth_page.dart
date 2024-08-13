@@ -15,10 +15,9 @@ class AuthService {
       bool isBiometricSupported =
           await _localAuthentication.isDeviceSupported();
       bool canCheckBiometrics = await _localAuthentication.canCheckBiometrics;
-
       if (isBiometricSupported && canCheckBiometrics) {
         isAuthenticated = await _localAuthentication.authenticate(
-          localizedReason: 'Scan your fingerprint to authenticate',
+          localizedReason: 'Scan your biometrics to authenticate',
         );
       }
     } on PlatformException catch (e) {
@@ -26,12 +25,25 @@ class AuthService {
     }
     return isAuthenticated;
   }
+
+  static Future<String> getAuthType() async {
+    List<BiometricType> availableBiometrics =
+        await _localAuthentication.getAvailableBiometrics();
+
+    if (availableBiometrics.contains(BiometricType.face)) {
+      return 'Face ID';
+    } else if (availableBiometrics.contains(BiometricType.fingerprint)) {
+      return 'Fingerprint';
+    } else {
+      return 'Unknown';
+    }
+  }
 }
 
 class FaceAuthPage extends StatefulWidget {
   final String useremail;
 
-  FaceAuthPage({super.key, required this.useremail});
+  FaceAuthPage({Key? key, required this.useremail}) : super(key: key);
 
   @override
   _FaceAuthPageState createState() => _FaceAuthPageState();
@@ -40,7 +52,6 @@ class FaceAuthPage extends StatefulWidget {
 class _FaceAuthPageState extends State<FaceAuthPage> {
   final LocalAuthentication auth = LocalAuthentication();
   bool _canCheckBiometrics = false;
-  bool _canCheckFace = false;
   String _authorized = 'Not Authorized';
   String _statusMessage = 'Initializing...';
 
@@ -53,24 +64,15 @@ class _FaceAuthPageState extends State<FaceAuthPage> {
   Future<void> _checkBiometrics() async {
     try {
       bool canCheckBiometrics = await auth.canCheckBiometrics;
-      List<BiometricType> biometricTypes = await auth.getAvailableBiometrics();
-
       setState(() {
         _canCheckBiometrics = canCheckBiometrics;
-        _canCheckFace = biometricTypes.contains(BiometricType.face);
-
-        if (_canCheckFace) {
-          _statusMessage = 'Face recognition available';
-        } else if (biometricTypes.isNotEmpty) {
-          _statusMessage = 'Other biometric authentication available';
-        } else {
-          _statusMessage = 'No biometric authentication available';
-        }
+        _statusMessage = _canCheckBiometrics
+            ? 'Biometric authentication available'
+            : 'No biometric authentication available';
       });
     } catch (e) {
       setState(() {
         _canCheckBiometrics = false;
-        _canCheckFace = false;
         _statusMessage = 'Error checking biometrics';
       });
       print("Error checking biometrics: $e");
@@ -79,21 +81,9 @@ class _FaceAuthPageState extends State<FaceAuthPage> {
 
   Future<void> _authenticate() async {
     bool authenticated = false;
-    String authType = '';
-
     try {
-      // Check if face biometrics is available and authenticate accordingly
-      if (_canCheckFace) {
-        authenticated = await auth.authenticate(
-          localizedReason: 'Scan your face to authenticate',
-        );
-        authType = 'face';
-      } else {
-        // Check for fingerprint biometrics and authenticate if available
-        authenticated = await auth.authenticate(
-          localizedReason: 'Scan your fingerprint to authenticate',
-        );
-        authType = 'fingerprint';
+      if (_canCheckBiometrics) {
+        authenticated = await AuthService.authenticateUser();
       }
     } catch (e) {
       print("Error during authentication: $e");
@@ -105,54 +95,43 @@ class _FaceAuthPageState extends State<FaceAuthPage> {
     }
 
     if (authenticated) {
-      // Generate a token after successful authentication
       String token = _generateToken();
       print("Generated Token: $token");
 
-      // Send authentication result to API
+      // Get the authentication type
+      String authType = await AuthService.getAuthType();
+
       final response = await http.post(
         Uri.parse('http://192.168.1.79:3000/setbiometric'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, dynamic>{
-          'authType': authType,
           'biometricToken': token,
           'useremail': widget.useremail,
+          'authType': authType,
         }),
       );
 
       if (response.statusCode == 201) {
-        // Authentication and API call successful
         setState(() {
           _authorized = 'Authorized';
-          _statusMessage = authType == 'face'
-              ? 'Face authentication successful'
-              : 'Fingerprint authentication successful';
+          _statusMessage = 'Biometric authentication successful';
         });
 
-        // Display a snackbar message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              authType == 'face'
-                  ? 'Face authentication setup successful!'
-                  : 'Fingerprint authentication setup successful!',
-            ),
+            content: Text('Biometric authentication setup successful!'),
             duration: Duration(seconds: 2),
           ),
         );
 
-        // Wait for the snackbar to finish before navigating
         await Future.delayed(Duration(seconds: 2));
-
-        // Navigate to the private screen or another page
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => AppsScreen()),
         );
       } else {
-        // API call failed
         setState(() {
           _authorized = 'Authorization failed';
           _statusMessage = 'Failed to authenticate with API';
@@ -165,14 +144,12 @@ class _FaceAuthPageState extends State<FaceAuthPage> {
         _statusMessage = 'Authentication failed';
       });
     }
-
     print("Authentication result: $authenticated");
   }
 
-  // Dummy function to generate a token. Replace with your own logic.
   String _generateToken() {
-    final bytes = utf8.encode(DateTime.now().toString()); // Use a unique value
-    return base64Encode(bytes); // Encode to Base64
+    final bytes = utf8.encode(DateTime.now().toString());
+    return base64Encode(bytes);
   }
 
   @override
@@ -206,11 +183,8 @@ class _FaceAuthPageState extends State<FaceAuthPage> {
               SizedBox(height: 20),
               GestureDetector(
                 onTap: () async {
-                  if (_canCheckBiometrics &&
-                      (_canCheckFace ||
-                          _statusMessage ==
-                              'Other biometric authentication available')) {
-                    await _authenticate(); // Update to handle token generation
+                  if (_canCheckBiometrics) {
+                    await _authenticate();
                   } else {
                     setState(() {
                       _authorized = 'No biometric authentication available';
@@ -236,20 +210,6 @@ class _FaceAuthPageState extends State<FaceAuthPage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class AppsScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Apps Screen'),
-      ),
-      body: Center(
-        child: Text('Welcome to the Apps Screen!'),
       ),
     );
   }
