@@ -1,5 +1,6 @@
 import 'package:bbl_security/AppsScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -19,6 +20,14 @@ class _PinScreenState extends State<PinScreen> {
   List<String> _currentPin = ["", "", "", ""];
   int _pinIndex = 0;
   String? _blinkKey;
+  FToast? _currentToast;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentToast = FToast();
+    _currentToast!.init(context);
+  }
 
   void _handleKeyTap(String value) {
     setState(() {
@@ -48,11 +57,15 @@ class _PinScreenState extends State<PinScreen> {
         });
         await _sendPinToServer(_firstPin!);
       } else {
-        setState(() {
-          _statusText = "PINs do not match. Try again.";
-          _isConfirming = false;
-          _firstPin = null;
-          _clearPin();
+        _showToast('Enter correct PIN', isSuccess: false);
+        Future.delayed(const Duration(seconds: 1), () {
+          setState(() {
+            _isConfirming = false;
+            _firstPin = null;
+            _statusText = "Enter PIN to setup lock";
+            _clearPin();
+          });
+          _currentToast!.removeCustomToast();
         });
       }
     } else {
@@ -99,15 +112,9 @@ class _PinScreenState extends State<PinScreen> {
 
         if (success) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(successMessage),
-                duration: const Duration(seconds: 2),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-
+            _showToast(successMessage, isSuccess: true);
             Future.delayed(const Duration(seconds: 2), () {
+              _currentToast!.removeCustomToast();
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => AppsScreen()),
@@ -118,27 +125,42 @@ class _PinScreenState extends State<PinScreen> {
           print('Failed to commit the PIN to SharedPreferences');
         }
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Failed to send PIN to server.'),
-              duration: const Duration(seconds: 2),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+        _showToast('Failed to send PIN to server.', isSuccess: false);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('An error occurred.'),
-            duration: const Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+      _showToast('An error occurred.', isSuccess: false);
     }
+  }
+
+  void _showToast(String message, {required bool isSuccess}) {
+    _currentToast!
+        .removeCustomToast(); // Cancel any existing toast before showing a new one
+    _currentToast!.showToast(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20.0),
+          color: isSuccess ? Colors.green : Colors.redAccent,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSuccess ? Icons.check_circle : Icons.error,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8.0),
+            Text(
+              message,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+      toastDuration: const Duration(seconds: 1),
+      gravity: ToastGravity.BOTTOM,
+    );
   }
 
   @override
