@@ -7,6 +7,7 @@ import 'splash.dart';
 import 'services/init.dart';
 import 'package:bbl_security/DisclamerScreen.dart';
 import 'package:bbl_security/pin_screen.dart';
+import 'package:bbl_security/AppsScreen.dart';
 
 GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -29,9 +30,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       getPages: [
-        GetPage(
-            name: '/',
-            page: () => PinScreen(useremail: useremail)), // Splash screen
+        GetPage(name: '/', page: () => SplashPage()), // Splash screen
       ],
       navigatorKey: navigatorKey,
     );
