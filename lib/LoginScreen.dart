@@ -48,6 +48,7 @@ class LoginScreenState extends State<LoginScreen> {
   }
 
   void registerUser() async {
+    print("Sign Up button clicked");
     setState(() {
       _emailErrorMessage =
           emailController.text.isEmpty ? 'Email cannot be empty' : null;
@@ -82,7 +83,7 @@ class LoginScreenState extends State<LoginScreen> {
     }
 
     final Uri url = Uri.parse('http://192.168.1.79:3000/signup');
-
+    print('server is called');
     try {
       final response = await http.post(
         url,
@@ -122,7 +123,7 @@ class LoginScreenState extends State<LoginScreen> {
   }
 
   void _showToast(String message) {
-    _cancelCurrentToast(); // Cancel any existing toast before showing a new one
+    _cancelCurrentToast(); 
     _currentToast!.showToast(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),

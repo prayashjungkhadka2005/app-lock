@@ -94,10 +94,8 @@ class _PinScreenState extends State<PinScreen> {
 
         final prefs = await SharedPreferences.getInstance();
 
-        // Store the PIN and mark the PIN setup as complete
         bool success = await prefs.setString('user_pin', pin);
-        await prefs.setBool(
-            'isPinSetupComplete', true); // Flag for PIN setup completion
+        await prefs.setBool('isPinSetupComplete', true);
 
         if (success) {
           if (mounted) {
@@ -153,25 +151,25 @@ class _PinScreenState extends State<PinScreen> {
           const Spacer(),
           const Image(
             image: AssetImage('assets/logo.png'),
-            width: 100,
-            height: 100,
+            width: 80,
+            height: 80,
           ),
           const SizedBox(height: 20),
           Text(
             _statusText,
             style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              color: Color.fromARGB(223, 4, 4, 4),
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF000E26),
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 30),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(4, (index) {
               return Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Container(
                   width: 50,
                   height: 50,
@@ -182,7 +180,7 @@ class _PinScreenState extends State<PinScreen> {
                     border: Border.all(
                       color: _currentPin[index].isNotEmpty &&
                               index == _pinIndex - 1
-                          ? Colors.blue
+                          ? const Color(0xFF000E26)
                           : Colors.transparent,
                       width: 2,
                     ),
@@ -200,7 +198,6 @@ class _PinScreenState extends State<PinScreen> {
           ),
           const Spacer(),
           buildKeyPad(),
-          const SizedBox(height: 0),
         ],
       ),
     );
@@ -208,18 +205,16 @@ class _PinScreenState extends State<PinScreen> {
 
   Widget buildKeyPad() {
     return Container(
-      color: Colors.grey.shade200,
-      padding:
-          const EdgeInsets.symmetric(vertical: 30), // Adjust padding as needed
+      color: const Color(0xFFF3F4F6),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           buildKeyPadRow(["1", "2", "3"]),
-          const SizedBox(height: 20), // Margin between rows
+          const SizedBox(height: 15),
           buildKeyPadRow(["4", "5", "6"]),
-          const SizedBox(height: 20), // Margin between rows
+          const SizedBox(height: 15),
           buildKeyPadRow(["7", "8", "9"]),
-          const SizedBox(height: 20), // Margin between rows
+          const SizedBox(height: 15),
           buildKeyPadRow([null, "0", "back"]),
         ],
       ),

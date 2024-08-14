@@ -32,77 +32,97 @@ class _LockOptionState extends State<LockOption> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Image.asset(
               'assets/logo.png',
-              width: 150,
-              height: 150,
+              width: 100,
+              height: 100,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
             const Text(
-              "Choose your preferred option",
+              "Choose Your Preferred Lock Method",
               style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w700,
-                color: Color.fromARGB(223, 4, 4, 4),
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF000E26),
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 15),
-            _buildButton(
-              context,
+            const SizedBox(height: 20),
+            OptionButton(
               icon: Icons.pin,
               text: 'PIN',
-              screen: PinScreen(useremail: widget.useremail),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        PinScreen(useremail: widget.useremail)),
+              ),
             ),
-            const SizedBox(height: 10),
-            _buildButton(
-              context,
+            OptionButton(
               icon: Icons.face,
               text: 'Face Lock',
-              screen: FaceAuthPage(useremail: widget.useremail),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        FaceAuthPage(useremail: widget.useremail)),
+              ),
             ),
-            const SizedBox(height: 10),
-            _buildButton(
-              context,
+            OptionButton(
               icon: Icons.fingerprint,
               text: 'Fingerprint',
-              screen: FingerprintAuthPage(),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FingerprintAuthPage()),
+              ),
             ),
-            const SizedBox(height: 10),
-            _buildButton(
-              context,
+            OptionButton(
               icon: Icons.pattern,
               text: 'Pattern',
-              screen: PatternsScreen(useremail: widget.useremail),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        PatternsScreen(useremail: widget.useremail)),
+              ),
             ),
-            const SizedBox(height: 10),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildButton(BuildContext context,
-      {required IconData icon, required String text, required Widget screen}) {
-    return SizedBox(
-      width: 380,
+class OptionButton extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final VoidCallback onPressed;
+
+  const OptionButton({
+    Key? key,
+    required this.icon,
+    required this.text,
+    required this.onPressed,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => screen),
-          );
-        },
+        onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF000E26),
+          backgroundColor: Color(0xFF000E26),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
+          padding: EdgeInsets.symmetric(horizontal: 20),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -110,16 +130,13 @@ class _LockOptionState extends State<LockOption> {
             Icon(icon, color: Colors.white),
             Text(
               text,
-              style: const TextStyle(
-                fontSize: 15,
+              style: TextStyle(
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
-            const Icon(
-              Icons.arrow_forward_ios,
-              color: Colors.white,
-            ),
+            Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
           ],
         ),
       ),

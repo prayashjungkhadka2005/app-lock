@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:fluttertoast/fluttertoast.dart';
 import 'RecoveryOtpScreen.dart';
 
 class SecurityQueScreen extends StatefulWidget {
@@ -8,12 +9,12 @@ class SecurityQueScreen extends StatefulWidget {
   final String country;
   final String password;
 
-  const SecurityQueScreen(
-      {Key? key,
-      required this.email,
-      required this.country,
-      required this.password})
-      : super(key: key);
+  const SecurityQueScreen({
+    Key? key,
+    required this.email,
+    required this.country,
+    required this.password,
+  }) : super(key: key);
 
   @override
   _SecurityQueScreenState createState() => _SecurityQueScreenState();
@@ -30,6 +31,14 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
   String? _question1ErrorMessage;
   String? _question2ErrorMessage;
   String? _question3ErrorMessage;
+  FToast? _currentToast;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentToast = FToast();
+    _currentToast!.init(context);
+  }
 
   void submitSecurityQuestions() async {
     setState(() {
@@ -74,35 +83,65 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
       final responseBody = jsonDecode(response.body);
 
       if (response.statusCode == 201 && mounted) {
+        _showToast('Security questions saved successfully', isSuccess: true);
+
+        // Wait for the toast to be shown before navigating to the next screen
+        await Future.delayed(Duration(seconds: 1)); // Adjust delay as needed
+
+        // Cancel the toast before navigating
+        _currentToast!.removeCustomToast();
+
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => RecoveryOtpScreen(
-                useremail: widget.email,
-                recoveryemail: recoveryEmail,
-                qns1: qns1,
-                qns2: qns2,
-                ans1: ans1,
-                ans2: ans2,
-                country: widget.country,
-                password: widget.password),
+              useremail: widget.email,
+              recoveryemail: recoveryEmail,
+              qns1: qns1,
+              qns2: qns2,
+              ans1: ans1,
+              ans2: ans2,
+              country: widget.country,
+              password: widget.password,
+            ),
           ),
         );
       } else {
-        showError('${responseBody['message']}');
+        _showToast(responseBody['message'], isSuccess: false);
       }
     } catch (e) {
-      showError('Failed to send recovery email: $e');
+      _showToast('Failed to send recovery email: $e', isSuccess: false);
     }
   }
 
-  void showError(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
+  void _showToast(String message, {required bool isSuccess}) {
+    _currentToast!
+        .removeCustomToast(); // Cancel any existing toast before showing a new one
+    _currentToast!.showToast(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20.0),
+          color: isSuccess ? Colors.green : Colors.redAccent,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSuccess ? Icons.check_circle : Icons.error,
+              color: Colors.white,
+              size: 20,
+            ),
+            SizedBox(width: 8.0),
+            Text(
+              message,
+              style: TextStyle(color: Colors.white, fontSize: 14),
+            ),
+          ],
+        ),
       ),
+      toastDuration: Duration(seconds: 1),
+      gravity: ToastGravity.BOTTOM,
     );
   }
 
@@ -112,46 +151,45 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
       backgroundColor: Colors.white,
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 Image.asset(
                   'assets/logo.png',
                   width: 100,
                   height: 100,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
                 const Text(
                   "Setup Security Questions",
                   style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      color: Color.fromARGB(223, 4, 4, 4)),
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF000E26),
+                  ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 15),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 40.0),
-                  child: Text(
-                    "One step away to make your mobile secure",
-                    style: TextStyle(
-                      color: Color.fromARGB(255, 116, 114, 114),
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                    ),
-                    textAlign: TextAlign.center,
+                const SizedBox(height: 10),
+                const Text(
+                  "One step away to secure your account",
+                  style: TextStyle(
+                    color: Color(0xFF6C6C6C),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 25),
+                const SizedBox(height: 30),
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     "1. What is your first pet name?",
                     style: TextStyle(
                       color: Colors.black,
-                      fontSize: 15,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -161,7 +199,7 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
                   controller: answer1Controller,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     hintText: 'Enter your answer',
                     errorText: _question1ErrorMessage,
@@ -174,7 +212,7 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
                     "2. Where were you born?",
                     style: TextStyle(
                       color: Colors.black,
-                      fontSize: 15,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -184,7 +222,7 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
                   controller: answer2Controller,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     hintText: 'Enter your answer',
                     errorText: _question2ErrorMessage,
@@ -197,7 +235,7 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
                     "3. Recovery Email?",
                     style: TextStyle(
                       color: Colors.black,
-                      fontSize: 15,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -207,28 +245,28 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
                   controller: recoveryEmailController,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     hintText: 'Enter your recovery email',
                     errorText: _question3ErrorMessage,
                   ),
                 ),
-                const SizedBox(height: 25),
+                const SizedBox(height: 30),
                 SizedBox(
-                  width: 380,
+                  width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
                     onPressed: submitSecurityQuestions,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF000E26),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: const Text(
                       "Let's Go",
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),

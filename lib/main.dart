@@ -5,6 +5,8 @@ import 'package:get/get.dart';
 import 'auth_screen.dart';
 import 'splash.dart';
 import 'services/init.dart';
+import 'package:bbl_security/DisclamerScreen.dart';
+import 'package:bbl_security/pin_screen.dart';
 
 GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -17,6 +19,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  String useremail = 'aaaa';
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
@@ -26,8 +29,9 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       getPages: [
-        GetPage(name: '/', page: () => SplashPage()), // Splash screen
-        GetPage(name: '/auth', page: () => AuthScreen()), // Auth screen
+        GetPage(
+            name: '/',
+            page: () => PinScreen(useremail: useremail)), // Splash screen
       ],
       navigatorKey: navigatorKey,
     );
