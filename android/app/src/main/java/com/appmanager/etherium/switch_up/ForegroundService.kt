@@ -17,7 +17,7 @@ import java.util.*
 class ForegroundService : Service() {
     private var timer: Timer = Timer()
     private lateinit var mHomeWatcher: HomeWatcher
-    private lateinit var window: Window
+    private var window: Window? = null // Changed to nullable
     private var isForeground = false
 
     override fun onBind(intent: Intent): IBinder? {
@@ -30,7 +30,9 @@ class ForegroundService : Service() {
         createNotificationChannel()
         startForegroundService()
 
+        // Initialize the window safely
         window = Window(this)
+
         mHomeWatcher = HomeWatcher(this).apply {
             setOnHomePressedListener(object : HomeWatcher.OnHomePressedListener {
                 override fun onHomePressed() {
@@ -73,14 +75,17 @@ class ForegroundService : Service() {
             usageEvents.getNextEvent(event)
 
             if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED) {
-                if (lockedAppList.contains(event.packageName)) {
-                    if (!window.isOpen() || !isForeground) {
-                        isForeground = true
-                        Handler(Looper.getMainLooper()).post { window.open() }
+                val window = this@ForegroundService.window // Safely access window
+                if (window != null) {
+                    if (lockedAppList.contains(event.packageName)) {
+                        if (!window.isOpen() || !isForeground) {
+                            isForeground = true
+                            Handler(Looper.getMainLooper()).post { window.open() }
+                        }
+                    } else if (window.isOpen()) {
+                        closeWindow()
+                        isForeground = false
                     }
-                } else if (window.isOpen()) {
-                    closeWindow()
-                    isForeground = false
                 }
             }
         }
@@ -101,8 +106,10 @@ class ForegroundService : Service() {
     }
 
     fun closeWindow() {
-        if (window.isOpen()) {
-            window.close()
+        window?.let {
+            if (it.isOpen()) {
+                it.close()
+            }
         }
         isForeground = false
     }
