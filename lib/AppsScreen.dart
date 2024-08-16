@@ -261,14 +261,25 @@ class _AppsScreenState extends State<AppsScreen> {
                               .contains(app.appName);
                         }).toList();
 
+                        if (lockedApps.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'No apps are secured yet.',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          );
+                        }
+
                         return GridView.builder(
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 4,
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
-                            childAspectRatio:
-                                0.75, // Adjusted for better appearance
+                            childAspectRatio: 0.75,
                           ),
                           itemCount: lockedApps.length,
                           itemBuilder: (context, index) {
@@ -318,6 +329,7 @@ class _AppsScreenState extends State<AppsScreen> {
                         });
                       },
                       decoration: InputDecoration(
+                        contentPadding: EdgeInsets.symmetric(vertical: 10.0),
                         labelText: "Search Not Secured Applications",
                         prefixIcon: Icon(Icons.search),
                         border: OutlineInputBorder(
