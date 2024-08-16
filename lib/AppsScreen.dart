@@ -16,6 +16,7 @@ class AppsScreen extends StatefulWidget {
 
 class _AppsScreenState extends State<AppsScreen> {
   bool isLoading = true;
+  String searchQuery = "";
 
   Future<void> getPermissions() async {
     if (!(await Get.find<MethodChannelController>().checkOverlayPermission()) ||
@@ -54,16 +55,14 @@ class _AppsScreenState extends State<AppsScreen> {
           return Icon(Icons.android);
         } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
           return CircleAvatar(
-            backgroundColor:
-                Colors.transparent, // Ensure no background color shows
-            radius: 25, // Adjust as needed
+            backgroundColor: Colors.transparent,
+            radius: 25,
             child: ClipOval(
               child: Image.memory(
                 snapshot.data!,
-                fit: BoxFit
-                    .cover, // Ensures the image fully occupies the CircleAvatar
-                width: double.infinity, // Full width
-                height: double.infinity, // Full height
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
               ),
             ),
           );
@@ -74,9 +73,12 @@ class _AppsScreenState extends State<AppsScreen> {
     );
   }
 
-  void toggleAppLock(Application app) {
-    if (Get.find<AppsController>().selectLockList.contains(app.appName)) {
-      showDialog(
+  Future<void> toggleAppLock(Application app) async {
+    final appsController = Get.find<AppsController>();
+
+    if (appsController.selectLockList.contains(app.appName)) {
+      // Show confirmation dialog before removing the app from the locked list
+      await showDialog(
         context: context,
         barrierDismissible: true,
         builder: (BuildContext context) {
@@ -150,10 +152,17 @@ class _AppsScreenState extends State<AppsScreen> {
                         ),
                         ElevatedButton(
                           onPressed: () async {
-                            await Get.find<AppsController>()
-                                .removeFromLockedApps(app, context);
-                            Get.find<MethodChannelController>()
+                            // Optimistically update UI
+                            setState(() {
+                              appsController.selectLockList.remove(app.appName);
+                            });
+
+                            // Remove app from locked list in background
+                            await appsController.removeFromLockedApps(
+                                app, context);
+                            await Get.find<MethodChannelController>()
                                 .addToLockedAppsMethod();
+
                             Navigator.of(context).pop(); // Close the dialog
                           },
                           style: ElevatedButton.styleFrom(
@@ -179,9 +188,13 @@ class _AppsScreenState extends State<AppsScreen> {
         },
       );
     } else {
+      // Add app to locked list
+      await appsController.addToLockedApps(app, context);
+      await Get.find<MethodChannelController>().addToLockedAppsMethod();
+
+      // Optimistically update UI
       setState(() {
-        Get.find<AppsController>().addToLockedApps(app, context);
-        Get.find<MethodChannelController>().addToLockedAppsMethod();
+        appsController.selectLockList.add(app.appName);
       });
     }
   }
@@ -225,7 +238,7 @@ class _AppsScreenState extends State<AppsScreen> {
                       Icon(
                         Icons.lock_outline,
                         size: 30,
-                        color: Color.fromARGB(255, 0, 0, 0),
+                        color: Colors.black,
                       ),
                       SizedBox(width: 10),
                       Text(
@@ -242,32 +255,37 @@ class _AppsScreenState extends State<AppsScreen> {
                     child: GetBuilder<AppsController>(
                       id: Get.find<AppsController>().addRemoveToUnlockUpdate,
                       builder: (appsController) {
-                        // Retrieve the list of locked applications using app names from selectLockList
                         List<Application> lockedApps =
                             appsController.unLockList.where((app) {
                           return appsController.selectLockList
                               .contains(app.appName);
                         }).toList();
 
-                        return GridView.count(
-                          crossAxisCount: 4,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                          children: List.generate(lockedApps.length, (index) {
+                        return GridView.builder(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio:
+                                0.75, // Adjusted for better appearance
+                          ),
+                          itemCount: lockedApps.length,
+                          itemBuilder: (context, index) {
                             Application app = lockedApps[index];
                             return Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 buildIcon(app),
-                                SizedBox(height: 3),
+                                SizedBox(height: 5),
                                 Text(
                                   app.appName,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontSize: 12),
+                                  style: TextStyle(fontSize: 14),
                                 ),
                               ],
                             );
-                          }),
+                          },
                         );
                       },
                     ),
@@ -291,30 +309,65 @@ class _AppsScreenState extends State<AppsScreen> {
                     ],
                   ),
                   SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: TextField(
+                      onChanged: (value) {
+                        setState(() {
+                          searchQuery = value.toLowerCase();
+                        });
+                      },
+                      decoration: InputDecoration(
+                        labelText: "Search Not Secured Applications",
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 12),
                   Expanded(
                     child: GetBuilder<AppsController>(
                       id: Get.find<AppsController>().addRemoveToUnlockUpdate,
                       builder: (appsController) {
+                        List<Application> filteredApps =
+                            appsController.unLockList.where((app) {
+                          return app.appName
+                              .toLowerCase()
+                              .contains(searchQuery);
+                        }).toList();
+
+                        filteredApps.sort((a, b) => a.appName
+                            .toLowerCase()
+                            .compareTo(b.appName.toLowerCase()));
+
                         return ListView.builder(
-                          itemCount: appsController.unLockList.length,
+                          itemCount: filteredApps.length,
                           itemBuilder: (context, index) {
-                            Application app = appsController.unLockList[index];
+                            Application app = filteredApps[index];
 
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 5),
                               child: Card(
-                                elevation: 2,
-                                margin: EdgeInsets.symmetric(vertical: 4),
-                                color: Colors.grey[200],
+                                elevation: 4,
+                                margin: EdgeInsets.symmetric(vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                color: Colors.grey[100],
                                 child: ListTile(
                                   leading: buildIcon(app),
-                                  title: Text(app.appName),
+                                  title: Text(
+                                    app.appName,
+                                    style: TextStyle(fontSize: 16),
+                                  ),
                                   trailing: SizedBox(
                                     width: 60,
                                     child: FlutterSwitch(
                                       width: 50.0,
                                       height: 25.0,
-                                      valueFontSize: 25.0,
+                                      valueFontSize: 12.0,
                                       toggleColor: Colors.white,
                                       activeColor:
                                           Theme.of(context).primaryColor,
@@ -327,7 +380,7 @@ class _AppsScreenState extends State<AppsScreen> {
                                       padding: 2.0,
                                       showOnOff: false,
                                       onToggle: (val) async {
-                                        toggleAppLock(app);
+                                        await toggleAppLock(app);
                                       },
                                     ),
                                   ),

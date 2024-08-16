@@ -1,11 +1,9 @@
 import 'dart:developer';
 import 'dart:typed_data';
-import 'dart:ui';
 import 'package:bbl_security/controllers/method_channel_controller.dart';
 import 'package:bbl_security/services/constants.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_switch/flutter_switch.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -99,8 +97,7 @@ class AppsController extends GetxController implements GetxService {
             ),
           );
         } else {
-          Fluttertoast.showToast(
-              msg: "You can add only 16 apps in locked list");
+          showToast("You can add only 16 apps in locked list");
         }
       }
     } catch (e) {
@@ -138,9 +135,9 @@ class AppsController extends GetxController implements GetxService {
             ),
           );
           Get.find<MethodChannelController>().addToLockedAppsMethod();
+          showToast("${app.appName} is locked");
         } else {
-          Fluttertoast.showToast(
-              msg: "You can add only 16 apps in locked list");
+          showToast("You can add only 16 apps in locked list");
         }
       }
     } catch (e) {
@@ -162,6 +159,7 @@ class AppsController extends GetxController implements GetxService {
       if (selectLockList.contains(app.appName)) {
         selectLockList.remove(app.appName);
         lockList.removeWhere((em) => em.application!.appName == app.appName);
+        showToast("${app.appName} is unlocked");
       }
     } catch (e) {
       log("Error in removeFromLockedApps: $e", name: "removeFromLockedApps");
@@ -170,7 +168,6 @@ class AppsController extends GetxController implements GetxService {
           AppConstants.lockedApps, bblDataModelToJson(lockList));
       addToAppsLoading = false;
       update([addRemoveToUnlockUpdate]);
-      displayLatestLockedApps();
     }
   }
 
@@ -204,9 +201,18 @@ class AppsController extends GetxController implements GetxService {
   void displayLatestLockedApps() {
     log("Latest Locked Apps: ${lockList.map((e) => e.application!.appName).toList()}",
         name: "displayLatestLockedApps");
+  }
 
+  void showToast(String message) {
+    Fluttertoast.cancel(); // Cancel any previous toast
     Fluttertoast.showToast(
-        msg: "Updated Locked Apps: ${lockList.length} apps",
-        toastLength: Toast.LENGTH_SHORT);
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT, // Short duration (1 second)
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.black,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
 }
