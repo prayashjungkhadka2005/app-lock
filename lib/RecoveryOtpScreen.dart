@@ -50,9 +50,10 @@ class _RecoveryOtpScreenState extends State<RecoveryOtpScreen> {
   }
 
   void _submitOtp() async {
+    _cancelCurrentToast();
     if (otpCode.length != 6) {
       _logger.warning('OTP code must be 6 digits long');
-      _showToast('Please enter a 6-digit OTP', isSuccess: false);
+      _showToast(context, 'Please enter a 6-digit OTP', isSuccess: false);
       return;
     }
 
@@ -76,12 +77,14 @@ class _RecoveryOtpScreenState extends State<RecoveryOtpScreen> {
       final responseBody = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        _cancelCurrentToast();
         _logger.info('OTP verified successfully');
-        _showToast(responseBody['message'], isSuccess: true);
+        _showToast(context, responseBody['message'], isSuccess: true);
 
         await Future.delayed(const Duration(seconds: 1));
 
         if (!mounted) return;
+        _cancelCurrentToast();
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -89,16 +92,19 @@ class _RecoveryOtpScreenState extends State<RecoveryOtpScreen> {
           ),
         );
       } else {
+        _cancelCurrentToast();
         _logger.warning(responseBody['message']);
-        _showToast(responseBody['message'], isSuccess: false);
+        _showToast(context, responseBody['message'], isSuccess: false);
       }
     } catch (e) {
+      _cancelCurrentToast();
       _logger.severe('Error during OTP verification: $e');
-      _showToast('Error during OTP verification', isSuccess: false);
+      _showToast(context, 'Error during OTP verification', isSuccess: false);
     }
   }
 
   void _resendOtp() async {
+    _cancelCurrentToast();
     try {
       final response = await http.post(
         resendOtpUrl,
@@ -112,60 +118,32 @@ class _RecoveryOtpScreenState extends State<RecoveryOtpScreen> {
       final responseBody = jsonDecode(response.body);
 
       if (response.statusCode == 201) {
+        _cancelCurrentToast();
         _logger.info('OTP resent successfully');
-        _showToast(responseBody['message'], isSuccess: true);
+        _showToast(context, responseBody['message'], isSuccess: true);
       } else {
+        _cancelCurrentToast();
         _logger.warning(responseBody['message']);
-        _showToast(responseBody['message'], isSuccess: false);
+        _showToast(context, responseBody['message'], isSuccess: false);
       }
     } catch (e) {
+      _cancelCurrentToast();
       _logger.severe('$e');
-      _showToast('Error during OTP resend', isSuccess: false);
+      _showToast(context, 'Error during OTP resend', isSuccess: false);
     }
-  }
-
-  void _showToast(String message, {required bool isSuccess}) {
-    _currentToast!
-        .removeCustomToast(); // Cancel any existing toast before showing a new one
-    _currentToast!.showToast(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20.0),
-          color: isSuccess ? Colors.green : Colors.redAccent,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSuccess ? Icons.check_circle : Icons.error,
-              color: Colors.white,
-              size: 20,
-            ),
-            SizedBox(width: 8.0),
-            Text(
-              message,
-              style: TextStyle(color: Colors.white, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-      toastDuration: Duration(seconds: 1),
-      gravity: ToastGravity.BOTTOM,
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     final defaultPinTheme = PinTheme(
-      width: 56,
-      height: 60,
+      width: 50, // Reduced width
+      height: 55, // Reduced height
       textStyle: const TextStyle(
-        fontSize: 22,
+        fontSize: 20, // Reduced font size
         color: Colors.black,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFFDDDEE1), // Pin box background color
+        color: const Color(0xFFDDDEE1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.transparent),
       ),
@@ -173,7 +151,7 @@ class _RecoveryOtpScreenState extends State<RecoveryOtpScreen> {
 
     final focusedPinTheme = defaultPinTheme.copyWith(
       decoration: defaultPinTheme.decoration!.copyWith(
-        border: Border.all(color: const Color(0xFF000E26)), // Border color
+        border: Border.all(color: const Color(0xFF000E26)),
       ),
     );
 
@@ -189,14 +167,14 @@ class _RecoveryOtpScreenState extends State<RecoveryOtpScreen> {
               children: <Widget>[
                 Image.asset(
                   'assets/logo.png',
-                  width: 100,
-                  height: 100,
+                  width: 80, // Reduced width
+                  height: 80, // Reduced height
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 25), // Reduced space
                 const Text(
                   "Recovery OTP Verification",
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: 24, // Reduced font size
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF000E26),
                   ),
@@ -204,18 +182,19 @@ class _RecoveryOtpScreenState extends State<RecoveryOtpScreen> {
                 ),
                 const SizedBox(height: 10),
                 const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 40.0),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 30.0), // Reduced padding
                   child: Text(
                     "Enter the recovery OTP sent to your email.",
                     style: TextStyle(
                       color: Color(0xFF6C6C6C),
                       fontWeight: FontWeight.w500,
-                      fontSize: 16,
+                      fontSize: 14, // Reduced font size
                     ),
                     textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 25), // Reduced space
                 Pinput(
                   length: 6,
                   defaultPinTheme: defaultPinTheme,
@@ -224,10 +203,10 @@ class _RecoveryOtpScreenState extends State<RecoveryOtpScreen> {
                     otpCode = value;
                   },
                 ),
-                const SizedBox(height: 50),
+                const SizedBox(height: 40), // Reduced space
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
+                  height: 45, // Reduced height
                   child: ElevatedButton(
                     onPressed: _submitOtp,
                     style: ElevatedButton.styleFrom(
@@ -239,7 +218,7 @@ class _RecoveryOtpScreenState extends State<RecoveryOtpScreen> {
                     child: const Text(
                       "Verify Recovery Email",
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14, // Reduced font size
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -256,7 +235,7 @@ class _RecoveryOtpScreenState extends State<RecoveryOtpScreen> {
                         "Resend OTP Code",
                         style: TextStyle(
                           color: Color(0xFF000E26),
-                          fontSize: 16,
+                          fontSize: 14, // Reduced font size
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -270,4 +249,44 @@ class _RecoveryOtpScreenState extends State<RecoveryOtpScreen> {
       ),
     );
   }
+}
+
+// Top-level function to show toast
+void _showToast(BuildContext context, String message,
+    {required bool isSuccess}) {
+  FToast fToast = FToast();
+  fToast.init(context);
+  fToast
+      .removeCustomToast(); // Cancel any existing toast before showing a new one
+  fToast.showToast(
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16.0),
+        color: isSuccess ? Colors.green : Colors.redAccent,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isSuccess ? Icons.check_circle : Icons.error,
+            color: Colors.white,
+            size: 18,
+          ),
+          const SizedBox(width: 6.0),
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+        ],
+      ),
+    ),
+    toastDuration: const Duration(seconds: 1),
+    gravity: ToastGravity.BOTTOM,
+  );
+}
+
+// Top-level function to cancel toast
+void _cancelCurrentToast() {
+  FToast().removeCustomToast();
 }

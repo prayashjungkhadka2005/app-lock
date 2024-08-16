@@ -38,20 +38,30 @@ class _LockOptionState extends State<LockOption> {
           children: <Widget>[
             Image.asset(
               'assets/logo.png',
-              width: 100,
-              height: 100,
+              width: 80, // Reduced width
+              height: 80, // Reduced height
             ),
             const SizedBox(height: 30),
             const Text(
               "Choose Your Preferred Lock Method",
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 22, // Reduced font size
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF000E26),
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
+            const Text(
+              "One step away to make your mobile secure",
+              style: TextStyle(
+                color: Color(0xFF6C6C6C),
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 25),
             OptionButton(
               icon: Icons.pin,
               text: 'PIN',
@@ -114,29 +124,30 @@ class OptionButton extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(top: 10),
       width: double.infinity,
-      height: 50,
+      height: 45, // Reduced height
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF000E26),
+          backgroundColor: const Color(0xFF000E26),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          padding: EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Icon(icon, color: Colors.white),
+            Icon(icon, color: Colors.white, size: 18), // Reduced icon size
             Text(
               text,
-              style: TextStyle(
-                fontSize: 16,
+              style: const TextStyle(
+                fontSize: 14, // Reduced font size
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
-            Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+            const Icon(Icons.arrow_forward_ios,
+                color: Colors.white, size: 14), // Reduced icon size
           ],
         ),
       ),

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:email_validator/email_validator.dart';
 import 'RecoveryOtpScreen.dart';
 
 class SecurityQueScreen extends StatefulWidget {
@@ -25,12 +26,10 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
   TextEditingController answer2Controller = TextEditingController();
   TextEditingController recoveryEmailController = TextEditingController();
 
-  bool _question1Error = false;
-  bool _question2Error = false;
-  bool _question3Error = false;
   String? _question1ErrorMessage;
   String? _question2ErrorMessage;
   String? _question3ErrorMessage;
+
   FToast? _currentToast;
 
   @override
@@ -40,21 +39,43 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
     _currentToast!.init(context);
   }
 
+  void _cancelCurrentToast() {
+    _currentToast?.removeCustomToast();
+  }
+
   void submitSecurityQuestions() async {
     setState(() {
-      _question1Error = answer1Controller.text.isEmpty;
-      _question2Error = answer2Controller.text.isEmpty;
-      _question3Error = recoveryEmailController.text.isEmpty;
-
       _question1ErrorMessage =
-          _question1Error ? 'This field cannot be empty' : null;
+          answer1Controller.text.isEmpty ? 'This field cannot be empty' : null;
       _question2ErrorMessage =
-          _question2Error ? 'This field cannot be empty' : null;
-      _question3ErrorMessage =
-          _question3Error ? 'This field cannot be empty' : null;
+          answer2Controller.text.isEmpty ? 'This field cannot be empty' : null;
+      _question3ErrorMessage = recoveryEmailController.text.isEmpty
+          ? 'This field cannot be empty'
+          : !EmailValidator.validate(recoveryEmailController.text)
+              ? 'Enter a valid email'
+              : null;
     });
 
-    if (_question1Error || _question2Error || _question3Error) {
+    int emptyFieldsCount = [
+      _question1ErrorMessage,
+      _question2ErrorMessage,
+      _question3ErrorMessage
+    ].where((message) => message != null).length;
+
+    if (emptyFieldsCount > 1) {
+      setState(() {
+        _question1ErrorMessage = null;
+        _question2ErrorMessage = null;
+        _question3ErrorMessage = null;
+      });
+      _cancelCurrentToast();
+      showToast(context, "Enter required security questions", isSuccess: false);
+      return;
+    }
+
+    if (_question1ErrorMessage != null ||
+        _question2ErrorMessage != null ||
+        _question3ErrorMessage != null) {
       return;
     }
 
@@ -83,13 +104,15 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
       final responseBody = jsonDecode(response.body);
 
       if (response.statusCode == 201 && mounted) {
-        _showToast('Security questions saved successfully', isSuccess: true);
+        showToast(context, 'Security questions saved successfully',
+            isSuccess: true);
 
-        // Wait for the toast to be shown before navigating to the next screen
-        await Future.delayed(Duration(seconds: 1)); // Adjust delay as needed
+        await Future.delayed(const Duration(seconds: 1));
 
         // Cancel the toast before navigating
-        _currentToast!.removeCustomToast();
+        _cancelCurrentToast();
+
+        if (!mounted) return;
 
         Navigator.push(
           context,
@@ -107,42 +130,11 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
           ),
         );
       } else {
-        _showToast(responseBody['message'], isSuccess: false);
+        showToast(context, responseBody['message'], isSuccess: false);
       }
     } catch (e) {
-      _showToast('Failed to send recovery email: $e', isSuccess: false);
+      showToast(context, 'Failed to send recovery email: $e', isSuccess: false);
     }
-  }
-
-  void _showToast(String message, {required bool isSuccess}) {
-    _currentToast!
-        .removeCustomToast(); // Cancel any existing toast before showing a new one
-    _currentToast!.showToast(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20.0),
-          color: isSuccess ? Colors.green : Colors.redAccent,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSuccess ? Icons.check_circle : Icons.error,
-              color: Colors.white,
-              size: 20,
-            ),
-            SizedBox(width: 8.0),
-            Text(
-              message,
-              style: TextStyle(color: Colors.white, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-      toastDuration: Duration(seconds: 1),
-      gravity: ToastGravity.BOTTOM,
-    );
   }
 
   @override
@@ -159,42 +151,42 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
               children: <Widget>[
                 Image.asset(
                   'assets/logo.png',
-                  width: 100,
-                  height: 100,
+                  width: 80,
+                  height: 80,
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 25),
                 const Text(
                   "Setup Security Questions",
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: 22, // Slightly smaller font size
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF000E26),
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 const Text(
                   "One step away to secure your account",
                   style: TextStyle(
                     color: Color(0xFF6C6C6C),
                     fontWeight: FontWeight.w500,
-                    fontSize: 16,
+                    fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 25),
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     "1. What is your first pet name?",
                     style: TextStyle(
                       color: Colors.black,
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 TextField(
                   controller: answer1Controller,
                   decoration: InputDecoration(
@@ -205,19 +197,19 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
                     errorText: _question1ErrorMessage,
                   ),
                 ),
-                const SizedBox(height: 25),
+                const SizedBox(height: 20),
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     "2. Where were you born?",
                     style: TextStyle(
                       color: Colors.black,
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 TextField(
                   controller: answer2Controller,
                   decoration: InputDecoration(
@@ -228,19 +220,19 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
                     errorText: _question2ErrorMessage,
                   ),
                 ),
-                const SizedBox(height: 25),
+                const SizedBox(height: 20),
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     "3. Recovery Email?",
                     style: TextStyle(
                       color: Colors.black,
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 TextField(
                   controller: recoveryEmailController,
                   decoration: InputDecoration(
@@ -251,10 +243,10 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
                     errorText: _question3ErrorMessage,
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 25),
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
+                  height: 45,
                   child: ElevatedButton(
                     onPressed: submitSecurityQuestions,
                     style: ElevatedButton.styleFrom(
@@ -266,7 +258,7 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
                     child: const Text(
                       "Let's Go",
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -280,4 +272,39 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
       ),
     );
   }
+}
+
+// Top-level function to show toast
+void showToast(BuildContext context, String message,
+    {required bool isSuccess}) {
+  FToast fToast = FToast();
+  fToast.init(context);
+  fToast
+      .removeCustomToast(); // Cancel any existing toast before showing a new one
+  fToast.showToast(
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16.0),
+        color: isSuccess ? Colors.green : Colors.redAccent,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isSuccess ? Icons.check_circle : Icons.error,
+            color: Colors.white,
+            size: 18,
+          ),
+          const SizedBox(width: 6.0),
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+        ],
+      ),
+    ),
+    toastDuration: const Duration(seconds: 1),
+    gravity: ToastGravity.BOTTOM,
+  );
 }

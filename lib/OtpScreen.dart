@@ -25,9 +25,9 @@ class OtpScreen extends StatefulWidget {
 }
 
 class OtpScreenState extends State<OtpScreen> {
-  final ValueNotifier<String> otpCode = ValueNotifier<String>('');
-
   FToast? _currentToast;
+
+  final ValueNotifier<String> otpCode = ValueNotifier<String>('');
 
   final Uri verifyOtpUrl = Uri.parse('http://192.168.1.79:3000/verifyotp');
   final Uri resendOtpUrl = Uri.parse('http://192.168.1.79:3000/resendotp');
@@ -39,10 +39,15 @@ class OtpScreenState extends State<OtpScreen> {
     _currentToast!.init(context);
   }
 
+  void _cancelCurrentToast() {
+    _currentToast?.removeCustomToast();
+  }
+
   void _submitOtp() async {
     if (otpCode.value.length != 6) {
+      _cancelCurrentToast();
       _logger.warning('OTP code must be 6 digits long');
-      _showToast('Please enter a 6-digit OTP', isSuccess: false);
+      _showToast(context, 'Please enter a 6-digit OTP', isSuccess: false);
       return;
     }
 
@@ -59,8 +64,9 @@ class OtpScreenState extends State<OtpScreen> {
       final responseBody = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        _cancelCurrentToast();
         _logger.info('OTP verified successfully');
-        _showToast(responseBody['message'], isSuccess: true);
+        _showToast(context, responseBody['message'], isSuccess: true);
 
         await Future.delayed(const Duration(seconds: 1));
 
@@ -76,12 +82,16 @@ class OtpScreenState extends State<OtpScreen> {
           ),
         );
       } else {
+        _cancelCurrentToast();
+
         _logger.warning('Failed to verify OTP: ${responseBody['message']}');
-        _showToast(responseBody['message'], isSuccess: false);
+        _showToast(context, responseBody['message'], isSuccess: false);
       }
     } catch (e) {
+      _cancelCurrentToast();
+
       _logger.severe('Error during OTP verification: $e');
-      _showToast('Error during OTP verification', isSuccess: false);
+      _showToast(context, 'Error during OTP verification', isSuccess: false);
     }
   }
 
@@ -98,68 +108,43 @@ class OtpScreenState extends State<OtpScreen> {
       final responseBody = jsonDecode(response.body);
 
       if (response.statusCode == 201) {
+        _cancelCurrentToast();
+
         _logger.info('OTP resent successfully');
-        _showToast(responseBody['message'], isSuccess: true);
+        _showToast(context, responseBody['message'], isSuccess: true);
       } else {
+        _cancelCurrentToast();
+
         _logger.warning('Failed to resend OTP: ${responseBody['message']}');
-        _showToast(responseBody['message'], isSuccess: false);
+        _showToast(context, responseBody['message'], isSuccess: false);
       }
     } catch (e) {
-      _logger.severe('Error during OTP resend: $e');
-      _showToast('Error during OTP resend', isSuccess: false);
-    }
-  }
+      _cancelCurrentToast();
 
-  void _showToast(String message, {required bool isSuccess}) {
-    _currentToast!
-        .removeCustomToast(); // Cancel any existing toast before showing a new one
-    _currentToast!.showToast(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20.0),
-          color: isSuccess ? Colors.green : Colors.redAccent,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSuccess ? Icons.check_circle : Icons.error,
-              color: Colors.white,
-              size: 20,
-            ),
-            SizedBox(width: 8.0),
-            Text(
-              message,
-              style: TextStyle(color: Colors.white, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-      toastDuration: Duration(seconds: 1),
-      gravity: ToastGravity.BOTTOM,
-    );
+      _logger.severe('Error during OTP resend: $e');
+      _showToast(context, 'Error during OTP resend', isSuccess: false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final defaultPinTheme = PinTheme(
-      width: 56,
-      height: 60,
+      width: 50,
+      height: 55,
       textStyle: const TextStyle(
-        fontSize: 22,
+        fontSize: 20,
         color: Colors.black,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFFDDDEE1), // Pin box background color
-        borderRadius: BorderRadius.circular(12), // Consistent with login screen
+        color: const Color(0xFFDDDEE1),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.transparent),
       ),
     );
 
     final focusedPinTheme = defaultPinTheme.copyWith(
       decoration: defaultPinTheme.decoration!.copyWith(
-        border: Border.all(color: const Color(0xFF000E26)), // Border color
+        border: Border.all(color: const Color(0xFF000E26)),
       ),
     );
 
@@ -175,29 +160,30 @@ class OtpScreenState extends State<OtpScreen> {
               children: <Widget>[
                 Image.asset(
                   'assets/logo.png',
-                  width: 100,
-                  height: 100,
+                  width: 80,
+                  height: 80,
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 25),
                 const Text(
                   "OTP Verification",
                   style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF000E26)),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  "One step away to secure your account",
-                  style: TextStyle(
-                    color: Color(0xFF6C6C6C),
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF000E26),
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 8),
+                const Text(
+                  "Enter the OTP sent to your email",
+                  style: TextStyle(
+                    color: Color(0xFF6C6C6C),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 25),
                 Pinput(
                   length: 6,
                   defaultPinTheme: defaultPinTheme,
@@ -206,10 +192,10 @@ class OtpScreenState extends State<OtpScreen> {
                     otpCode.value = value;
                   },
                 ),
-                const SizedBox(height: 50),
+                const SizedBox(height: 40),
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
+                  height: 45,
                   child: ElevatedButton(
                     onPressed: _submitOtp,
                     style: ElevatedButton.styleFrom(
@@ -221,20 +207,20 @@ class OtpScreenState extends State<OtpScreen> {
                     child: const Text(
                       "Verify Now",
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     const Text(
                       "Didn't receive the code? ",
-                      style: TextStyle(color: Color(0xFF6C6C6C), fontSize: 16),
+                      style: TextStyle(color: Color(0xFF6C6C6C), fontSize: 14),
                     ),
                     GestureDetector(
                       onTap: _resendOtp,
@@ -242,7 +228,7 @@ class OtpScreenState extends State<OtpScreen> {
                         "Resend OTP Code",
                         style: TextStyle(
                           color: Color(0xFF000E26),
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -256,4 +242,44 @@ class OtpScreenState extends State<OtpScreen> {
       ),
     );
   }
+}
+
+// Top-level function to show toast
+void _showToast(BuildContext context, String message,
+    {required bool isSuccess}) {
+  FToast fToast = FToast();
+  fToast.init(context);
+  fToast
+      .removeCustomToast(); // Cancel any existing toast before showing a new one
+  fToast.showToast(
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16.0),
+        color: isSuccess ? Colors.green : Colors.redAccent,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isSuccess ? Icons.check_circle : Icons.error,
+            color: Colors.white,
+            size: 18,
+          ),
+          const SizedBox(width: 6.0),
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+        ],
+      ),
+    ),
+    toastDuration: const Duration(seconds: 1),
+    gravity: ToastGravity.BOTTOM,
+  );
+}
+
+// Top-level function to cancel toast
+void _cancelCurrentToast() {
+  FToast().removeCustomToast();
 }

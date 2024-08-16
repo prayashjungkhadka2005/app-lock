@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/state_manager.dart';
@@ -24,20 +25,17 @@ class AskPermissionBottomSheet extends StatelessWidget {
   Widget permissionWidget(BuildContext context, String name, bool permission,
       IconData icon, String description, VoidCallback onTap) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: 6,
-        horizontal: 6,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
       child: GestureDetector(
         onTap: permission ? null : onTap,
         child: Container(
           width: MediaQuery.of(context).size.width * 0.85,
           decoration: BoxDecoration(
             color: permission ? Colors.green[50] : Colors.red[50],
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: permission ? Colors.green : Theme.of(context).primaryColor,
-              width: 2,
+              width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
@@ -49,28 +47,29 @@ class AskPermissionBottomSheet extends StatelessWidget {
           ),
           child: ListTile(
             leading: Icon(icon,
-                color: permission ? Colors.green : Colors.red, size: 32),
+                color: permission ? Colors.green : Colors.red, size: 28),
             title: Text(
               name,
               style: TextStyle(
                 color: permission
                     ? Colors.green[800]
                     : Theme.of(context).primaryColorDark,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
               ),
             ),
             subtitle: Text(
               description,
               style: TextStyle(
                 color: permission ? Colors.green[600] : Colors.red[400],
-                fontSize: 14,
+                fontSize: 12,
               ),
             ),
             trailing: Icon(
-                permission ? Icons.check_circle : Icons.error_outline,
-                color: permission ? Colors.green : Colors.red,
-                size: 24),
+              permission ? Icons.check_circle : Icons.error_outline,
+              color: permission ? Colors.green : Colors.red,
+              size: 20,
+            ),
           ),
         ),
       ),
@@ -87,8 +86,6 @@ class AskPermissionBottomSheet extends StatelessWidget {
       BuildContext context, MethodChannelController state) async {
     await checkPermissions(state);
 
-    Fluttertoast.cancel(); // Cancel any existing toast before showing a new one
-
     if (!state.isOverlayPermissionGiven ||
         !state.isUsageStatPermissionGiven ||
         !state.isBatteryOptimizationIgnored) {
@@ -96,12 +93,9 @@ class AskPermissionBottomSheet extends StatelessWidget {
         msg: "Please grant all required permissions.",
         backgroundColor: Colors.red,
         textColor: Colors.white,
-        toastLength: Toast.LENGTH_SHORT,
       );
     } else {
-      // Cancel all toasts before closing the dialog
       Fluttertoast.cancel();
-
       Navigator.pop(context);
       Fluttertoast.showToast(
         msg: "All permissions granted.",
@@ -121,105 +115,118 @@ class AskPermissionBottomSheet extends StatelessWidget {
       },
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-            width: size.width,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+        body: Stack(
+          children: [
+            // Blurred background
+            BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
               ),
             ),
-            child: GetBuilder<MethodChannelController>(builder: (state) {
-              return SingleChildScrollView(
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 20,
-                      ),
-                      child: Text(
-                        "To ensure the best experience, please grant the following permissions:",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColorDark,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-                    permissionWidget(
-                      context,
-                      "System Overlay",
-                      state.isOverlayPermissionGiven,
-                      Icons.visibility,
-                      "Allows the app to display over other apps.",
-                      () async {
-                        if (!state.isOverlayPermissionGiven) {
-                          await state.askOverlayPermission();
-                        }
-                      },
-                    ),
-                    permissionWidget(
-                      context,
-                      "Usage Access",
-                      state.isUsageStatPermissionGiven,
-                      Icons.bar_chart,
-                      "Provides data on app usage statistics.",
-                      () async {
-                        if (!state.isUsageStatPermissionGiven) {
-                          await state.askUsageStatsPermission();
-                        }
-                      },
-                    ),
-                    permissionWidget(
-                      context,
-                      "Ignore Battery Optimizations",
-                      state.isBatteryOptimizationIgnored,
-                      Icons.battery_alert,
-                      "Prevents the app from being put to sleep.",
-                      () async {
-                        if (!state.isBatteryOptimizationIgnored) {
-                          await state.askBatteryOptimizationPermission();
-                        }
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 20,
-                        horizontal: 20,
-                      ),
-                      child: ElevatedButton.icon(
-                        icon: Icon(Icons.check, color: Colors.white),
-                        label: Text(
-                          "Confirm",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).primaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.0),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 50, vertical: 15),
-                        ),
-                        onPressed: () async {
-                          await confirmPermissions(context, state);
-                        },
-                      ),
-                    ),
-                  ],
+            // Dialog content
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                width: size.width,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(15),
+                    topRight: Radius.circular(15),
+                  ),
                 ),
-              );
-            }),
-          ),
+                child: GetBuilder<MethodChannelController>(builder: (state) {
+                  return SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 15,
+                          ),
+                          child: Text(
+                            "To ensure the best experience, please grant the following permissions:",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Theme.of(context).primaryColorDark,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                        permissionWidget(
+                          context,
+                          "System Overlay",
+                          state.isOverlayPermissionGiven,
+                          Icons.visibility,
+                          "Allows the app to display over other apps.",
+                          () async {
+                            if (!state.isOverlayPermissionGiven) {
+                              await state.askOverlayPermission();
+                            }
+                          },
+                        ),
+                        permissionWidget(
+                          context,
+                          "Usage Access",
+                          state.isUsageStatPermissionGiven,
+                          Icons.bar_chart,
+                          "Provides data on app usage statistics.",
+                          () async {
+                            if (!state.isUsageStatPermissionGiven) {
+                              await state.askUsageStatsPermission();
+                            }
+                          },
+                        ),
+                        permissionWidget(
+                          context,
+                          "Ignore Battery Optimizations",
+                          state.isBatteryOptimizationIgnored,
+                          Icons.battery_alert,
+                          "Prevents the app from being put to sleep.",
+                          () async {
+                            if (!state.isBatteryOptimizationIgnored) {
+                              await state.askBatteryOptimizationPermission();
+                            }
+                          },
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 15,
+                            horizontal: 20,
+                          ),
+                          child: ElevatedButton.icon(
+                            icon: Icon(Icons.check, color: Colors.white),
+                            label: Text(
+                              "Confirm",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25.0),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 40, vertical: 12),
+                            ),
+                            onPressed: () async {
+                              Fluttertoast.cancel();
+                              await confirmPermissions(context, state);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ],
         ),
       ),
     );

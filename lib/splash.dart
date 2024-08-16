@@ -1,7 +1,5 @@
-import 'package:bbl_security/AppsScreen.dart';
-import 'package:bbl_security/LoginScreen.dart';
-import 'package:bbl_security/home.dart';
 import 'package:flutter/material.dart';
+import 'home.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({Key? key}) : super(key: key);
@@ -15,12 +13,12 @@ class _SplashPageState extends State<SplashPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      // Call the navigation after the widget has built
-      Future.delayed(const Duration(seconds: 2), () {
+      // Introduce a very short delay to ensure the splash screen image is seen
+      Future.delayed(const Duration(milliseconds: 300), () {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                HomePage(),
+                const HomePage(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               const begin = Offset(0.0, 1.0);
@@ -50,14 +48,14 @@ class _SplashPageState extends State<SplashPage> {
           children: <Widget>[
             Image.asset(
               'assets/logo.png',
-              width: 250,
-              height: 250,
+              width: 200, // Reduced width
+              height: 200, // Reduced height
             ),
             const SizedBox(height: 20),
             const Text(
               "BBL Security",
               style: TextStyle(
-                fontSize: 32,
+                fontSize: 28, // Reduced font size
                 fontWeight: FontWeight.w700,
                 color: Color.fromARGB(223, 4, 4, 4),
               ),
@@ -70,8 +68,8 @@ class _SplashPageState extends State<SplashPage> {
                 "Ultimate App Lock with Premium Protection",
                 style: TextStyle(
                   color: Color.fromARGB(255, 116, 114, 114),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
+                  fontWeight: FontWeight.w600, // Slightly lighter weight
+                  fontSize: 14, // Reduced font size
                 ),
                 textAlign: TextAlign.center,
               ),

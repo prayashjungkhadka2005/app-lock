@@ -38,9 +38,10 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
       );
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 201) {
+        _cancelCurrentToast();
         _showToast(responseBody['message'], isSuccess: true);
         Future.delayed(const Duration(seconds: 1), () {
-          _currentToast!.removeCustomToast();
+          _cancelCurrentToast();
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -48,9 +49,11 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
           );
         });
       } else {
+        _cancelCurrentToast();
         _showToast(responseBody['message'], isSuccess: false);
       }
     } catch (e) {
+      _cancelCurrentToast();
       _showToast('An error occurred: $e', isSuccess: false);
     }
   }
@@ -73,16 +76,15 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
             // Dialog Box
             Dialog(
               backgroundColor:
-                  Color(0xFF000E26), // Match the background color of the screen
+                  const Color(0xFF000E26), // Original background color
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Container(
-                width: MediaQuery.of(context).size.width *
-                    0.85, // Slightly wider dialog
-                padding: const EdgeInsets.all(24),
+                width: MediaQuery.of(context).size.width * 0.85,
+                padding: const EdgeInsets.all(20), // Reduced padding
                 decoration: BoxDecoration(
-                  color: Color(0xFF000E26), // Match the screen background
+                  color: const Color(0xFF000E26), // Original background color
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -93,11 +95,11 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
                       color: Colors.redAccent,
                       size: 48,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12), // Reduced space
                     const Text(
                       "Already leaving?",
                       style: TextStyle(
-                        fontSize: 22,
+                        fontSize: 20, // Reduced font size
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -106,12 +108,12 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
                     const Text(
                       "By confirming, the signup process will be exited. Are you sure you want to decline?",
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14, // Reduced font size
                         color: Colors.white70,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20), // Reduced space
                     SizedBox(
                       width:
                           double.infinity, // Makes the button take full width
@@ -127,21 +129,23 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.redAccent,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius:
+                                BorderRadius.circular(12), // Reduced radius
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12), // Reduced padding
                         ),
                         child: const Text(
                           "Yes, Opt out",
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 14, // Reduced font size
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12), // Reduced space
                     TextButton(
                       onPressed: () {
                         Navigator.of(context).pop();
@@ -149,7 +153,7 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
                       child: const Text(
                         "No, I am staying",
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 14, // Reduced font size
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -166,13 +170,13 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
   }
 
   void _showToast(String message, {required bool isSuccess}) {
-    _currentToast!
-        .removeCustomToast(); // Cancel any existing toast before showing a new one
+    _cancelCurrentToast(); // Cancel any existing toast before showing a new one
     _currentToast!.showToast(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 12.0, vertical: 6.0), // Reduced padding
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20.0),
+          borderRadius: BorderRadius.circular(16.0), // Reduced radius
           color: isSuccess ? Colors.green : Colors.redAccent,
         ),
         child: Row(
@@ -181,12 +185,13 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
             Icon(
               isSuccess ? Icons.check_circle : Icons.error,
               color: Colors.white,
-              size: 20,
+              size: 18, // Reduced icon size
             ),
-            const SizedBox(width: 8.0),
+            const SizedBox(width: 6.0), // Reduced space
             Text(
               message,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: const TextStyle(
+                  color: Colors.white, fontSize: 12), // Reduced font size
             ),
           ],
         ),
@@ -196,10 +201,14 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
     );
   }
 
+  void _cancelCurrentToast() {
+    _currentToast?.removeCustomToast();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.white, // Original background color
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -210,16 +219,16 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
               children: <Widget>[
                 Image.asset(
                   'assets/logo.png',
-                  width: 100,
-                  height: 100,
+                  width: 100, // Reduced width
+                  height: 100, // Reduced height
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 30), // Reduced space
                 const Text(
                   "Disclaimer",
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: 28, // Reduced font size
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF000E26),
+                    color: Color(0xFF000E26), // Original text color
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -229,14 +238,14 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
                   child: Text(
                     "BBL Security is designed to enhance the privacy and security of your apps and personal information. While we strive to provide robust protection, we cannot guarantee absolute security against all possible threats. Users are responsible for maintaining the confidentiality of their passwords and other access credentials. BBL Security is not liable for any data loss or unauthorized access resulting from user negligence or misuse of the app. By using this app, you agree to these terms and conditions.",
                     style: TextStyle(
-                      color: Color(0xFF6C6C6C),
+                      color: Color(0xFF6C6C6C), // Original text color
                       fontWeight: FontWeight.w400,
-                      fontSize: 16,
+                      fontSize: 16, // Reduced font size
                     ),
                     textAlign: TextAlign.justify,
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 30), // Reduced space
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -246,7 +255,8 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Colors.redAccent),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(12), // Reduced radius
                           ),
                           padding: const EdgeInsets.symmetric(
                               vertical:
@@ -255,7 +265,7 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
                         child: const Text(
                           "Decline",
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 16, // Original font size
                             fontWeight: FontWeight.bold,
                             color: Colors.redAccent,
                           ),
@@ -269,7 +279,8 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF000E26),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(12), // Reduced radius
                           ),
                           padding: const EdgeInsets.symmetric(
                               vertical:
@@ -278,7 +289,7 @@ class _DisclamerScreenState extends State<DisclamerScreen> {
                         child: const Text(
                           "Accept",
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 16, // Original font size
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),

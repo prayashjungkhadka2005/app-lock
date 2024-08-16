@@ -330,7 +330,7 @@ class _AppsScreenState extends State<AppsScreen> {
                       },
                       decoration: InputDecoration(
                         contentPadding: EdgeInsets.symmetric(vertical: 10.0),
-                        labelText: "Search Not Secured Applications",
+                        labelText: "Search Applications",
                         prefixIcon: Icon(Icons.search),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),

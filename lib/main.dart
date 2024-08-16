@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       getPages: [
-        GetPage(name: '/', page: () => AppsScreen()), // Splash screen
+        GetPage(name: '/', page: () => SplashPage()), // Splash screen
       ],
       navigatorKey: navigatorKey,
     );
