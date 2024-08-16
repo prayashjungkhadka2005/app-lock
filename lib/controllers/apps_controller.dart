@@ -1,9 +1,11 @@
 import 'dart:developer';
 import 'dart:typed_data';
+import 'dart:ui';
 import 'package:bbl_security/controllers/method_channel_controller.dart';
 import 'package:bbl_security/services/constants.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_switch/flutter_switch.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';

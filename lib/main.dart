@@ -1,3 +1,4 @@
+import 'package:bbl_security/App.dart';
 import 'package:bbl_security/AppsScreen.dart';
 import 'package:bbl_security/LoginScreen.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       getPages: [
-        GetPage(name: '/', page: () => SplashPage()), // Splash screen
+        GetPage(name: '/', page: () => AppsScreen()), // Splash screen
       ],
       navigatorKey: navigatorKey,
     );

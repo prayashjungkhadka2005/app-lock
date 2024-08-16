@@ -9,12 +9,12 @@ import 'package:bbl_security/controllers/apps_controller.dart';
 import 'package:bbl_security/controllers/method_channel_controller.dart';
 import 'package:bbl_security/widgets/permission_dialog.dart';
 
-class AppsScreen extends StatefulWidget {
+class App extends StatefulWidget {
   @override
-  _AppsScreenState createState() => _AppsScreenState();
+  _AppState createState() => _AppState();
 }
 
-class _AppsScreenState extends State<AppsScreen> {
+class _AppState extends State<App> {
   bool isLoading = true;
 
   Future<void> getPermissions() async {
@@ -30,10 +30,12 @@ class _AppsScreenState extends State<AppsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      // Start all async operations simultaneously
       final getAppDataFuture = Get.find<AppsController>().getAppsData();
       final getLockedAppsFuture = Get.find<AppsController>().getLockedApps();
       final getPermissionsFuture = getPermissions();
 
+      // Await them all at once with explicit type
       await Future.wait<void>([
         getAppDataFuture,
         getLockedAppsFuture,
@@ -54,6 +56,7 @@ class _AppsScreenState extends State<AppsScreen> {
           return Icon(Icons.android);
         } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
           return CircleAvatar(
+            backgroundImage: MemoryImage(snapshot.data!),
             backgroundColor:
                 Colors.transparent, // Ensure no background color shows
             radius: 25, // Adjust as needed
@@ -62,8 +65,8 @@ class _AppsScreenState extends State<AppsScreen> {
                 snapshot.data!,
                 fit: BoxFit
                     .cover, // Ensures the image fully occupies the CircleAvatar
-                width: double.infinity, // Full width
-                height: double.infinity, // Full height
+                width: double.infinity, // Make sure it takes the full width
+                height: double.infinity, // Make sure it takes the full height
               ),
             ),
           );
