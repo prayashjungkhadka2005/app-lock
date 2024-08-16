@@ -87,6 +87,8 @@ class AskPermissionBottomSheet extends StatelessWidget {
       BuildContext context, MethodChannelController state) async {
     await checkPermissions(state);
 
+    Fluttertoast.cancel(); // Cancel any existing toast before showing a new one
+
     if (!state.isOverlayPermissionGiven ||
         !state.isUsageStatPermissionGiven ||
         !state.isBatteryOptimizationIgnored) {
@@ -94,13 +96,18 @@ class AskPermissionBottomSheet extends StatelessWidget {
         msg: "Please grant all required permissions.",
         backgroundColor: Colors.red,
         textColor: Colors.white,
+        toastLength: Toast.LENGTH_SHORT,
       );
     } else {
+      // Cancel all toasts before closing the dialog
+      Fluttertoast.cancel();
+
       Navigator.pop(context);
       Fluttertoast.showToast(
         msg: "All permissions granted.",
         backgroundColor: Colors.green,
         textColor: Colors.white,
+        toastLength: Toast.LENGTH_SHORT,
       );
     }
   }
