@@ -1,6 +1,7 @@
 import 'package:bbl_security/App.dart';
 import 'package:bbl_security/AppsScreen.dart';
 import 'package:bbl_security/LoginScreen.dart';
+import 'package:bbl_security/NewPasswordScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'auth_screen.dart';
@@ -21,7 +22,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  String useremail = 'aaaa';
+  String email = 'aaaa';
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(

@@ -1,8 +1,77 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:bbl_security/ResetOtpScreen.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-class ForgotPassword extends StatelessWidget {
+class ForgotPassword extends StatefulWidget {
   const ForgotPassword({Key? key}) : super(key: key);
+
+  @override
+  _ForgotPasswordState createState() => _ForgotPasswordState();
+}
+
+class _ForgotPasswordState extends State<ForgotPassword> {
+  final TextEditingController _emailController = TextEditingController();
+  FToast? _currentToast;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentToast = FToast();
+    _currentToast!.init(context);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  void _cancelCurrentToast() {
+    _currentToast?.removeCustomToast();
+  }
+
+  Future<void> _sendResetLink() async {
+    final String email = _emailController.text;
+
+    if (email.isEmpty) {
+      _showToast(context, "Please enter your email address", isSuccess: false);
+      return;
+    }
+
+    final Uri url = Uri.parse('http://192.168.1.79:3000/forgot');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      final responseBody = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        _cancelCurrentToast(); // Cancel any active toast
+        _showToast(context, responseBody['message'], isSuccess: true);
+
+        await Future.delayed(const Duration(seconds: 1));
+
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ResetOtpScreen(useremail: email),
+            ),
+          );
+        }
+      } else {
+        _showToast(context, responseBody['message'], isSuccess: false);
+      }
+    } catch (e) {
+      _showToast(context, 'Failed to send reset link: $e', isSuccess: false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +110,7 @@ class ForgotPassword extends StatelessWidget {
               ),
               const SizedBox(height: 25),
               TextFormField(
+                controller: _emailController,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.email),
                   border: OutlineInputBorder(
@@ -54,7 +124,7 @@ class ForgotPassword extends StatelessWidget {
                 width: double.infinity,
                 height: 45,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: _sendResetLink,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF000E26),
                     shape: RoundedRectangleBorder(

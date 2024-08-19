@@ -1,7 +1,11 @@
+import 'package:bbl_security/AppsScreen.dart';
 import 'package:bbl_security/ForgotPassword.dart';
 import 'package:bbl_security/LoginScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserLogin extends StatefulWidget {
   const UserLogin({Key? key}) : super(key: key);
@@ -31,25 +35,59 @@ class _UserLoginState extends State<UserLogin> {
     super.dispose();
   }
 
-  void _validateAndLogin() async {
+  Future<void> _validateAndLogin() async {
     bool isEmailEmpty = _emailController.text.isEmpty;
     bool isPasswordEmpty = _passwordController.text.isEmpty;
 
     if (isEmailEmpty && isPasswordEmpty) {
-      // Show only the toast message and prevent individual error messages
       _showToast(context, "Please fill up required fields", isSuccess: false);
       await Future.delayed(const Duration(seconds: 1));
       return;
     }
 
     if (_formKey.currentState?.validate() ?? false) {
-      // Handle login logic here
-      // For example, navigate to the home screen
       _cancelCurrentToast();
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
+
+      final Uri url = Uri.parse('http://192.168.1.79:3000/login');
+
+      try {
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'email': _emailController.text,
+            'password': _passwordController.text,
+          }),
+        );
+
+        final responseBody = jsonDecode(response.body);
+
+        if (response.statusCode == 201) {
+          if (responseBody['message'] == 'Login successful') {
+            final pin = responseBody['pin']; // Get the pin from response
+
+            final prefs = await SharedPreferences.getInstance();
+
+            bool success = await prefs.setString('user_pin', pin);
+            await prefs.setBool('isPinSetupComplete', true);
+
+            if (success) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AppsScreen()),
+              );
+            } else {
+              _showToast(context, 'Failed to store PIN', isSuccess: false);
+            }
+          } else {
+            _showToast(context, responseBody['message'], isSuccess: false);
+          }
+        } else {
+          _showToast(context, responseBody['message'], isSuccess: false);
+        }
+      } catch (e) {
+        _showToast(context, '$e', isSuccess: false);
+      }
     }
   }
 
@@ -135,8 +173,6 @@ class _UserLoginState extends State<UserLogin> {
                           return 'This field cannot be left empty';
                         }
                         return null; // No error message if all fields are empty
-                      } else if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
                       }
                       return null;
                     },
