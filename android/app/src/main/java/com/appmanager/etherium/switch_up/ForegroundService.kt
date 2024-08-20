@@ -54,13 +54,14 @@ class ForegroundService : Service() {
         mHomeWatcher.stopWatch()
     }
 
-    private fun startMonitoringApps() {
-        timer.scheduleAtFixedRate(object : TimerTask() {
-            override fun run() {
-                monitorForegroundApp()
-            }
-        }, 0, 200) // Check more frequently to catch app changes
-    }
+private fun startMonitoringApps() {
+    timer.schedule(object : TimerTask() {
+        override fun run() {
+            monitorForegroundApp()
+        }
+    }, 0, 100) // This will execute the task immediately once
+}
+
 
     private fun monitorForegroundApp() {
         val saveAppData: SharedPreferences = getSharedPreferences("save_app_data", Context.MODE_PRIVATE)
@@ -68,7 +69,7 @@ class ForegroundService : Service() {
 
         val usageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
         val time = System.currentTimeMillis()
-        val usageEvents = usageStatsManager.queryEvents(time - 2000, time)
+        val usageEvents = usageStatsManager.queryEvents(time - 1000, time)
         val event = UsageEvents.Event()
 
         while (usageEvents.hasNextEvent()) {
