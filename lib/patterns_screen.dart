@@ -1,7 +1,11 @@
+import 'dart:math';
+
 import 'package:bbl_security/AppsScreen.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PatternsScreen extends StatefulWidget {
   final String useremail;
@@ -19,8 +23,10 @@ class _PatternsScreenState extends State<PatternsScreen>
   final GlobalKey _paintKey = GlobalKey();
   late AnimationController _controller;
   late Animation<double> _animation;
-  String errorMessage = '';
-  List<int> initialPattern = [];
+  String _statusText = "Draw Pattern to setup Lock";
+  FToast? _currentToast;
+  List<int> _initialPattern = [];
+  bool _isConfirming = false;
 
   @override
   void initState() {
@@ -30,6 +36,8 @@ class _PatternsScreenState extends State<PatternsScreen>
       vsync: this,
     )..repeat(reverse: true);
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _currentToast = FToast();
+    _currentToast!.init(context);
   }
 
   @override
@@ -55,19 +63,14 @@ class _PatternsScreenState extends State<PatternsScreen>
               height: 150,
             ),
             const SizedBox(height: 20),
-            const Text(
-              "Draw Pattern to setup Lock",
-              style: TextStyle(
+            Text(
+              _statusText,
+              style: const TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.w700,
                 color: Color.fromARGB(223, 4, 4, 4),
               ),
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              errorMessage,
-              style: TextStyle(color: Colors.red),
             ),
             const SizedBox(height: 10),
             Container(
@@ -109,29 +112,27 @@ class _PatternsScreenState extends State<PatternsScreen>
 
   void _onPanEnd(DragEndDetails event) {
     if (codes.length < 4) {
-      setState(() {
-        errorMessage = "You must draw at least 4 points to set a pattern.";
-      });
+      _showToast("You must draw at least 4 points to set a pattern.",
+          isSuccess: false);
       _clearCodes();
     } else {
-      setState(() {
-        errorMessage = '';
-        initialPattern = List.from(codes);
-        _clearCodes();
-      });
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ConfirmPatternScreen(
-            initialPattern: initialPattern,
-            useremail: widget.useremail,
-          ),
-        ),
-      );
+      if (_isConfirming) {
+        if (_initialPattern.join() == codes.join()) {
+          _sendPatternToServer(_initialPattern.join());
+        } else {
+          _showToast("Patterns do not match! Try again.", isSuccess: false);
+          _resetPatternSetup();
+        }
+      } else {
+        setState(() {
+          _initialPattern = List.from(codes);
+          _isConfirming = true;
+          _statusText = "Confirm your Pattern";
+          _clearCodes();
+        });
+      }
     }
     setState(() => offset = null);
-    print(
-        "Generated code: ${initialPattern.join()}"); // Print the initial pattern
   }
 
   void _onSelect(int code) {
@@ -146,186 +147,87 @@ class _PatternsScreenState extends State<PatternsScreen>
       offset = null;
     });
   }
-}
 
-class ConfirmPatternScreen extends StatefulWidget {
-  final List<int> initialPattern;
-  final String useremail;
-
-  ConfirmPatternScreen({required this.initialPattern, required this.useremail});
-
-  @override
-  _ConfirmPatternScreenState createState() => _ConfirmPatternScreenState();
-}
-
-class _ConfirmPatternScreenState extends State<ConfirmPatternScreen>
-    with TickerProviderStateMixin {
-  Offset? offset;
-  List<int> codes = [];
-  final GlobalKey _paintKey = GlobalKey();
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  String errorMessage = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    )..repeat(reverse: true);
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+  void _resetPatternSetup() {
+    setState(() {
+      _isConfirming = false;
+      _initialPattern = [];
+      _statusText = "Draw Pattern to setup Lock";
+      _clearCodes();
+    });
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  Future<void> _sendPatternToServer(String pattern) async {
+    final url = 'http://192.168.1.79:3000/setpattern';
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'useremail': widget.useremail,
+          'pattern': pattern,
+        }),
+      );
+      print(pattern);
+
+      if (response.statusCode == 201) {
+        final responseBody = jsonDecode(response.body);
+        final successMessage =
+            responseBody['message'] ?? 'Pattern setup successfully!';
+
+        // Save the pattern and authentication method to SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        bool success = await prefs.setString('user_pattern', pattern);
+        await prefs.setString('auth_method', 'Pattern');
+
+        if (success) {
+          _showToast(successMessage, isSuccess: true);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => AppsScreen()),
+          );
+        } else {
+          print('Failed to commit the pattern to SharedPreferences');
+        }
+      } else {
+        _showToast('Failed to send pattern to server.', isSuccess: false);
+      }
+    } catch (e) {
+      _showToast('An error occurred.', isSuccess: false);
+    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    var _width = MediaQuery.of(context).size.width;
-    var _sizePainter = Size.square(_width);
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Image.asset(
-              'assets/logo.png',
-              width: 150,
-              height: 150,
+  void _showToast(String message, {required bool isSuccess}) {
+    _currentToast!.removeCustomToast();
+    _currentToast!.showToast(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20.0),
+          color: isSuccess ? Colors.green : Colors.redAccent,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSuccess ? Icons.check_circle : Icons.error,
+              color: Colors.white,
+              size: 20,
             ),
-            const SizedBox(height: 20),
-            const Text(
-              "Draw Pattern to confirm Lock",
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w700,
-                color: Color.fromARGB(223, 4, 4, 4),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(width: 8.0),
             Text(
-              errorMessage,
-              style: TextStyle(color: Colors.red),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              margin: EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: GestureDetector(
-                child: CustomPaint(
-                  key: _paintKey,
-                  painter: _LockScreenPainter(
-                    codes: codes,
-                    offset: offset,
-                    onSelect: _onSelect,
-                    animation: _animation,
-                  ),
-                  size: _sizePainter,
-                ),
-                onPanStart: (details) {
-                  _clearCodes();
-                  _onPanUpdate(DragUpdateDetails(
-                      globalPosition: details.globalPosition));
-                },
-                onPanUpdate: _onPanUpdate,
-                onPanEnd: _onPanEnd,
-              ),
+              message,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
             ),
           ],
         ),
       ),
+      toastDuration: const Duration(seconds: 1),
+      gravity: ToastGravity.BOTTOM,
     );
-  }
-
-  void _onPanUpdate(DragUpdateDetails event) {
-    RenderBox box = _paintKey.currentContext!.findRenderObject() as RenderBox;
-    setState(() => offset = box.globalToLocal(event.globalPosition));
-  }
-
-  void _onPanEnd(DragEndDetails event) {
-    setState(() => offset = null);
-    _confirm();
-    print("Generated code: ${codes.join()}"); // Print the confirmation pattern
-  }
-
-  void _onSelect(int code) {
-    if (!codes.contains(code)) {
-      codes.add(code);
-    }
-  }
-
-  void _clearCodes() {
-    setState(() {
-      codes = [];
-      offset = null;
-    });
-  }
-
-  void _confirm() async {
-      if (codes.join() == widget.initialPattern.join()) {
-        final response = await http.post(
-          Uri.parse('http://192.168.1.79:3000/setpattern'),
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode(<String, dynamic>{
-            'pattern': codes.join(),
-            'useremail': widget.useremail,
-          }),
-        );
-
-      final Map<String, dynamic> responseBody = jsonDecode(response.body);
-
-      if (response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                responseBody['message'] ?? 'Pattern confirmed successfully!'),
-            duration: Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => AppsScreen()),
-        );
-      } else {
-        setState(() {
-          errorMessage =
-              responseBody['message'] ?? 'An error occurred. Please try again.';
-          _clearCodes();
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            duration: Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } else {
-      setState(() {
-        errorMessage = "Patterns do not match! Try again.";
-        _clearCodes();
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          duration: Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
   }
 }
 
@@ -357,13 +259,13 @@ class _LockScreenPainter extends CustomPainter {
     this.size = size;
 
     for (var i = 0; i < _total; i++) {
-      var _offset = _getOffsetByIndex(i);
+      var offset = _getOffsetByIndex(i);
       var _color = _getColorByIndex(i);
 
       var _radiusIn = _sizeCode / 2.0 * 0.2;
-      _drawCircle(canvas, _offset, _radiusIn, _color, true);
+      _drawCircle(canvas, offset, _radiusIn, _color, true);
 
-      var _pathGesture = _getCirclePath(_offset, _radiusIn);
+      var _pathGesture = _getCirclePath(offset, _radiusIn);
       if (offset != null && _pathGesture.contains(offset!)) onSelect(i);
     }
 
@@ -419,19 +321,5 @@ class _LockScreenPainter extends CustomPainter {
   @override
   bool shouldRepaint(_LockScreenPainter oldDelegate) {
     return offset != oldDelegate.offset || codes != oldDelegate.codes;
-  }
-}
-
-class AppsScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Apps'),
-      ),
-      body: Center(
-        child: Text('Welcome to the Apps Screen!'),
-      ),
-    );
   }
 }

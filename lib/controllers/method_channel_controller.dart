@@ -14,7 +14,7 @@ class MethodChannelController extends GetxController implements GetxService {
 
   bool isOverlayPermissionGiven = false;
   bool isUsageStatPermissionGiven = false;
-  bool isBatteryOptimizationIgnored = false; // New field
+  bool isBatteryOptimizationIgnored = false; 
 
   Future<bool> checkOverlayPermission() async {
     try {
@@ -49,7 +49,7 @@ class MethodChannelController extends GetxController implements GetxService {
   }
 
   Future<void> addToLockedAppsMethod() async {
-    // Collects app data from AppsController
+    
     try {
       List<Map<String, String>> lockedApps = Get.find<AppsController>()
           .lockList
@@ -114,7 +114,7 @@ class MethodChannelController extends GetxController implements GetxService {
     final status = await Permission.ignoreBatteryOptimizations.request();
     if (status.isGranted) {
       isBatteryOptimizationIgnored = true;
-      update(); // Trigger UI update
+      update(); 
     }
   }
 }

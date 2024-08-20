@@ -8,7 +8,6 @@ class AppConstants {
   static const int appVersion = 1;
   static const String installedApps = 'installed_apps';
 
-  // Shared Key
   static const String token = 'user_app_token';
   static const String userId = 'user_app_id';
   static const String lockedApps = 'lockedApps';

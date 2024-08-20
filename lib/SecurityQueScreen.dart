@@ -109,7 +109,6 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
 
         await Future.delayed(const Duration(seconds: 1));
 
-        // Cancel the toast before navigating
         _cancelCurrentToast();
 
         if (!mounted) return;
@@ -158,7 +157,7 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
                 const Text(
                   "Setup Security Questions",
                   style: TextStyle(
-                    fontSize: 22, // Slightly smaller font size
+                    fontSize: 22, 
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF000E26),
                   ),
@@ -274,13 +273,12 @@ class _SecurityQueScreenState extends State<SecurityQueScreen> {
   }
 }
 
-// Top-level function to show toast
 void showToast(BuildContext context, String message,
     {required bool isSuccess}) {
   FToast fToast = FToast();
   fToast.init(context);
   fToast
-      .removeCustomToast(); // Cancel any existing toast before showing a new one
+      .removeCustomToast(); 
   fToast.showToast(
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),

@@ -30,12 +30,10 @@ class _AppState extends State<App> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      // Start all async operations simultaneously
       final getAppDataFuture = Get.find<AppsController>().getAppsData();
       final getLockedAppsFuture = Get.find<AppsController>().getLockedApps();
       final getPermissionsFuture = getPermissions();
 
-      // Await them all at once with explicit type
       await Future.wait<void>([
         getAppDataFuture,
         getLockedAppsFuture,
@@ -58,15 +56,15 @@ class _AppState extends State<App> {
           return CircleAvatar(
             backgroundImage: MemoryImage(snapshot.data!),
             backgroundColor:
-                Colors.transparent, // Ensure no background color shows
-            radius: 25, // Adjust as needed
+                Colors.transparent, 
+            radius: 25, 
             child: ClipOval(
               child: Image.memory(
                 snapshot.data!,
                 fit: BoxFit
-                    .cover, // Ensures the image fully occupies the CircleAvatar
-                width: double.infinity, // Make sure it takes the full width
-                height: double.infinity, // Make sure it takes the full height
+                    .cover, 
+                width: double.infinity, 
+                height: double.infinity, 
               ),
             ),
           );
@@ -142,7 +140,7 @@ class _AppState extends State<App> {
                       children: [
                         TextButton(
                           onPressed: () {
-                            Navigator.of(context).pop(); // Close the dialog
+                            Navigator.of(context).pop(); 
                           },
                           child: Text(
                             "Cancel",
@@ -157,7 +155,7 @@ class _AppState extends State<App> {
                                 .removeFromLockedApps(app, context);
                             Get.find<MethodChannelController>()
                                 .addToLockedAppsMethod();
-                            Navigator.of(context).pop(); // Close the dialog
+                            Navigator.of(context).pop(); 
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(context).primaryColor,
@@ -245,7 +243,6 @@ class _AppState extends State<App> {
                     child: GetBuilder<AppsController>(
                       id: Get.find<AppsController>().addRemoveToUnlockUpdate,
                       builder: (appsController) {
-                        // Retrieve the list of locked applications using app names from selectLockList
                         List<Application> lockedApps =
                             appsController.unLockList.where((app) {
                           return appsController.selectLockList

@@ -64,7 +64,7 @@ class _UserLoginState extends State<UserLogin> {
 
         if (response.statusCode == 201) {
           if (responseBody['message'] == 'Login successful') {
-            final pin = responseBody['pin']; // Get the pin from response
+            final pin = responseBody['pin'];
 
             final prefs = await SharedPreferences.getInstance();
 
@@ -149,7 +149,7 @@ class _UserLoginState extends State<UserLogin> {
                         if (_passwordController.text.isNotEmpty) {
                           return 'This field cannot be left empty';
                         }
-                        return null; // No error message if all fields are empty
+                        return null;
                       } else if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
                         return 'Please enter a valid email address';
                       }
@@ -172,7 +172,7 @@ class _UserLoginState extends State<UserLogin> {
                         if (_emailController.text.isNotEmpty) {
                           return 'This field cannot be left empty';
                         }
-                        return null; // No error message if all fields are empty
+                        return null;
                       }
                       return null;
                     },
@@ -279,8 +279,7 @@ void _showToast(BuildContext context, String message,
     {required bool isSuccess}) {
   FToast fToast = FToast();
   fToast.init(context);
-  fToast
-      .removeCustomToast(); // Cancel any existing toast before showing a new one
+  fToast.removeCustomToast();
   fToast.showToast(
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),

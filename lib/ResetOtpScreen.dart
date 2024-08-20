@@ -115,10 +115,10 @@ class _ResetOtpScreenState extends State<ResetOtpScreen> {
   @override
   Widget build(BuildContext context) {
     final defaultPinTheme = PinTheme(
-      width: 50, // Reduced width
-      height: 55, // Reduced height
+      width: 50, 
+      height: 55,
       textStyle: const TextStyle(
-        fontSize: 20, // Reduced font size
+        fontSize: 20, 
         color: Colors.black,
       ),
       decoration: BoxDecoration(
@@ -146,14 +146,14 @@ class _ResetOtpScreenState extends State<ResetOtpScreen> {
               children: <Widget>[
                 Image.asset(
                   'assets/logo.png',
-                  width: 80, // Reduced width
-                  height: 80, // Reduced height
+                  width: 80, 
+                  height: 80, 
                 ),
-                const SizedBox(height: 25), // Reduced space
+                const SizedBox(height: 25), 
                 const Text(
                   "Reset OTP Verification",
                   style: TextStyle(
-                    fontSize: 24, // Reduced font size
+                    fontSize: 24, 
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF000E26),
                   ),
@@ -162,18 +162,18 @@ class _ResetOtpScreenState extends State<ResetOtpScreen> {
                 const SizedBox(height: 10),
                 const Padding(
                   padding:
-                      EdgeInsets.symmetric(horizontal: 30.0), // Reduced padding
+                      EdgeInsets.symmetric(horizontal: 30.0),
                   child: Text(
                     "Enter the reset OTP sent to your email.",
                     style: TextStyle(
                       color: Color(0xFF6C6C6C),
                       fontWeight: FontWeight.w500,
-                      fontSize: 14, // Reduced font size
+                      fontSize: 14, 
                     ),
                     textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(height: 25), // Reduced space
+                const SizedBox(height: 25), 
                 Pinput(
                   length: 6,
                   defaultPinTheme: defaultPinTheme,
@@ -182,10 +182,10 @@ class _ResetOtpScreenState extends State<ResetOtpScreen> {
                     otpCode = value;
                   },
                 ),
-                const SizedBox(height: 40), // Reduced space
+                const SizedBox(height: 40), 
                 SizedBox(
                   width: double.infinity,
-                  height: 45, // Reduced height
+                  height: 45, 
                   child: ElevatedButton(
                     onPressed: _submitOtp,
                     style: ElevatedButton.styleFrom(
@@ -197,7 +197,7 @@ class _ResetOtpScreenState extends State<ResetOtpScreen> {
                     child: const Text(
                       "Verify",
                       style: TextStyle(
-                        fontSize: 14, // Reduced font size
+                        fontSize: 14, 
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -214,7 +214,7 @@ class _ResetOtpScreenState extends State<ResetOtpScreen> {
                         "Resend OTP Code",
                         style: TextStyle(
                           color: Color(0xFF000E26),
-                          fontSize: 14, // Reduced font size
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -230,13 +230,12 @@ class _ResetOtpScreenState extends State<ResetOtpScreen> {
   }
 }
 
-// Top-level function to show toast
 void _showToast(BuildContext context, String message,
     {required bool isSuccess}) {
   FToast fToast = FToast();
   fToast.init(context);
   fToast
-      .removeCustomToast(); // Cancel any existing toast before showing a new one
+      .removeCustomToast(); 
   fToast.showToast(
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
@@ -265,7 +264,6 @@ void _showToast(BuildContext context, String message,
   );
 }
 
-// Top-level function to cancel toast
 void _cancelCurrentToast() {
   FToast().removeCustomToast();
 }

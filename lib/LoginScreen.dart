@@ -66,7 +66,6 @@ class LoginScreenState extends State<LoginScreen> {
       _countryErrorMessage =
           _selectedCountry == null ? 'Country cannot be empty' : null;
 
-      // Count the number of empty fields
       emptyFieldsCount = [
         _emailErrorMessage,
         _passwordErrorMessage,
@@ -75,7 +74,6 @@ class LoginScreenState extends State<LoginScreen> {
       ].where((message) => message != null).length;
     });
 
-    // If more than one field is empty, show a toast message and clear individual errors
     if (emptyFieldsCount > 1) {
       setState(() {
         _emailErrorMessage = null;
@@ -88,12 +86,10 @@ class LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // If only one field is empty, show the error message for that field only
     if (emptyFieldsCount == 1) {
       return;
     }
 
-    // Validate email format
     if (!EmailValidator.validate(emailController.text)) {
       setState(() {
         _emailErrorMessage = 'Enter a valid email';
@@ -101,7 +97,6 @@ class LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // Validate password match
     if (passwordController.text != confirmPasswordController.text) {
       setState(() {
         _confirmPasswordErrorMessage = 'Passwords do not match';
@@ -109,7 +104,6 @@ class LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // Proceed with the registration
     final Uri url = Uri.parse('http://192.168.1.79:3000/signup');
 
     try {
@@ -124,11 +118,10 @@ class LoginScreenState extends State<LoginScreen> {
       );
 
       if (response.statusCode == 201 && mounted) {
-        _cancelCurrentToast(); // Cancel any active toast
+        _cancelCurrentToast(); 
         await Future.delayed(
-            const Duration(seconds: 1)); // Wait for the toast to be shown
+            const Duration(seconds: 1)); 
 
-        // Ensure the widget is still mounted before navigating
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -207,7 +200,7 @@ class LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        height: 55, // Match height with other input fields
+                        height: 55, 
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
                           border: Border.all(
@@ -270,7 +263,7 @@ class LoginScreenState extends State<LoginScreen> {
                     labelText: 'Email',
                     errorText: _emailErrorMessage,
                     errorStyle:
-                        const TextStyle(fontSize: 12), // Smaller error text
+                        const TextStyle(fontSize: 12), 
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -285,7 +278,7 @@ class LoginScreenState extends State<LoginScreen> {
                     labelText: 'Password',
                     errorText: _passwordErrorMessage,
                     errorStyle:
-                        const TextStyle(fontSize: 12), // Smaller error text
+                        const TextStyle(fontSize: 12), 
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -300,7 +293,7 @@ class LoginScreenState extends State<LoginScreen> {
                     labelText: 'Confirm Password',
                     errorText: _confirmPasswordErrorMessage,
                     errorStyle:
-                        const TextStyle(fontSize: 12), // Smaller error text
+                        const TextStyle(fontSize: 12),
                   ),
                 ),
                 const SizedBox(height: 25),
@@ -382,7 +375,7 @@ void _showToast(BuildContext context, String message,
   FToast fToast = FToast();
   fToast.init(context);
   fToast
-      .removeCustomToast(); // Cancel any existing toast before showing a new one
+      .removeCustomToast();
   fToast.showToast(
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),

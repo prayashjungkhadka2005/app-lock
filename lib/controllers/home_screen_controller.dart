@@ -12,10 +12,6 @@ class HomeScreenController extends GetxController implements GetxService {
   onChangeMethod(int page) {
     isSelectPage = page;
     update();
-    // controller.animateToPage(
-    //   page,
-    //   duration: const Duration(milliseconds: 400),
-    //   curve: Curves.fastOutSlowIn,
-    // );
+   
   }
 }

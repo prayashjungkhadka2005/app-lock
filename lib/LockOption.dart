@@ -38,14 +38,14 @@ class _LockOptionState extends State<LockOption> {
           children: <Widget>[
             Image.asset(
               'assets/logo.png',
-              width: 80, // Reduced width
-              height: 80, // Reduced height
+              width: 80, 
+              height: 80, 
             ),
             const SizedBox(height: 30),
             const Text(
               "Choose Your Preferred Lock Method",
               style: TextStyle(
-                fontSize: 22, // Reduced font size
+                fontSize: 22, 
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF000E26),
               ),
@@ -124,7 +124,7 @@ class OptionButton extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(top: 10),
       width: double.infinity,
-      height: 45, // Reduced height
+      height: 45, 
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -137,17 +137,17 @@ class OptionButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Icon(icon, color: Colors.white, size: 18), // Reduced icon size
+            Icon(icon, color: Colors.white, size: 18), 
             Text(
               text,
               style: const TextStyle(
-                fontSize: 14, // Reduced font size
+                fontSize: 14, 
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
             const Icon(Icons.arrow_forward_ios,
-                color: Colors.white, size: 14), // Reduced icon size
+                color: Colors.white, size: 14), 
           ],
         ),
       ),

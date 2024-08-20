@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'dart:convert'; // Import for encoding to base64
-import 'package:http/http.dart' as http; // Import for HTTP requests
+import 'dart:convert'; 
+import 'package:http/http.dart' as http;
 
 class AuthService {
   static final LocalAuthentication _localAuthentication = LocalAuthentication();
@@ -98,7 +98,6 @@ class _FaceAuthPageState extends State<FaceAuthPage> {
       String token = _generateToken();
       print("Generated Token: $token");
 
-      // Get the authentication type
       String authType = await AuthService.getAuthType();
 
       final response = await http.post(

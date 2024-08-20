@@ -1,5 +1,5 @@
 import 'package:bbl_security/AppsScreen.dart';
-import 'package:bbl_security/LoginScreen.dart'; // Import your login screen
+import 'package:bbl_security/LoginScreen.dart'; 
 import 'package:bbl_security/controllers/apps_controller.dart';
 import 'package:bbl_security/controllers/method_channel_controller.dart';
 import 'package:bbl_security/widgets/permission_dialog.dart';

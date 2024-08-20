@@ -2,6 +2,7 @@ import 'package:bbl_security/App.dart';
 import 'package:bbl_security/AppsScreen.dart';
 import 'package:bbl_security/LoginScreen.dart';
 import 'package:bbl_security/NewPasswordScreen.dart';
+import 'package:bbl_security/patterns_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'auth_screen.dart';
@@ -22,7 +23,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  String email = 'aaaa';
+  String useremail = 'aaaa';
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
@@ -32,7 +33,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       getPages: [
-        GetPage(name: '/', page: () => SplashPage()), // Splash screen
+        GetPage(name: '/', page: () => SplashPage()),
       ],
       navigatorKey: navigatorKey,
     );

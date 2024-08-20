@@ -13,7 +13,6 @@ class _SplashPageState extends State<SplashPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      // Introduce a very short delay to ensure the splash screen image is seen
       Future.delayed(const Duration(milliseconds: 300), () {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
@@ -48,14 +47,14 @@ class _SplashPageState extends State<SplashPage> {
           children: <Widget>[
             Image.asset(
               'assets/logo.png',
-              width: 200, // Reduced width
-              height: 200, // Reduced height
+              width: 200,
+              height: 200,
             ),
             const SizedBox(height: 20),
             const Text(
               "BBL Security",
               style: TextStyle(
-                fontSize: 28, // Reduced font size
+                fontSize: 28, 
                 fontWeight: FontWeight.w700,
                 color: Color.fromARGB(223, 4, 4, 4),
               ),
@@ -68,8 +67,8 @@ class _SplashPageState extends State<SplashPage> {
                 "Ultimate App Lock with Premium Protection",
                 style: TextStyle(
                   color: Color.fromARGB(255, 116, 114, 114),
-                  fontWeight: FontWeight.w600, // Slightly lighter weight
-                  fontSize: 14, // Reduced font size
+                  fontWeight: FontWeight.w600, 
+                  fontSize: 14, 
                 ),
                 textAlign: TextAlign.center,
               ),

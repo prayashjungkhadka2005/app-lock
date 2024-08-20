@@ -52,7 +52,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
       final responseBody = jsonDecode(response.body);
 
       if (response.statusCode == 201) {
-        _cancelCurrentToast(); // Cancel any active toast
+        _cancelCurrentToast();
         _showToast(context, responseBody['message'], isSuccess: true);
 
         await Future.delayed(const Duration(seconds: 1));
@@ -154,7 +154,7 @@ void _showToast(BuildContext context, String message,
   FToast fToast = FToast();
   fToast.init(context);
   fToast
-      .removeCustomToast(); // Cancel any existing toast before showing a new one
+      .removeCustomToast();
   fToast.showToast(
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),

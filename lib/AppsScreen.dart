@@ -77,7 +77,6 @@ class _AppsScreenState extends State<AppsScreen> {
     final appsController = Get.find<AppsController>();
 
     if (appsController.selectLockList.contains(app.appName)) {
-      // Show confirmation dialog before removing the app from the locked list
       await showDialog(
         context: context,
         barrierDismissible: true,
@@ -141,7 +140,7 @@ class _AppsScreenState extends State<AppsScreen> {
                       children: [
                         TextButton(
                           onPressed: () {
-                            Navigator.of(context).pop(); // Close the dialog
+                            Navigator.of(context).pop(); 
                           },
                           child: Text(
                             "Cancel",
@@ -152,18 +151,16 @@ class _AppsScreenState extends State<AppsScreen> {
                         ),
                         ElevatedButton(
                           onPressed: () async {
-                            // Optimistically update UI
                             setState(() {
                               appsController.selectLockList.remove(app.appName);
                             });
 
-                            // Remove app from locked list in background
                             await appsController.removeFromLockedApps(
                                 app, context);
                             await Get.find<MethodChannelController>()
                                 .addToLockedAppsMethod();
 
-                            Navigator.of(context).pop(); // Close the dialog
+                            Navigator.of(context).pop(); 
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(context).primaryColor,
@@ -188,11 +185,9 @@ class _AppsScreenState extends State<AppsScreen> {
         },
       );
     } else {
-      // Add app to locked list
       await appsController.addToLockedApps(app, context);
       await Get.find<MethodChannelController>().addToLockedAppsMethod();
 
-      // Optimistically update UI
       setState(() {
         appsController.selectLockList.add(app.appName);
       });

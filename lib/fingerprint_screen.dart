@@ -89,7 +89,6 @@ class _FingerprintAuthPageState extends State<FingerprintAuthPage> {
               SizedBox(height: 20),
               GestureDetector(
                 onTap: () async {
-                  // Check if biometrics are available
                   if (_canCheckBiometrics) {
                     await _authenticate();
                   } else {

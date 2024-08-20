@@ -29,13 +29,11 @@ import '../controllers/permission_controller.dart';
 
 Future<void> initialize() async {
   final prefs = await SharedPreferences.getInstance();
-  Get.put(prefs); // Use put instead of lazyPut for SharedPreferences as it's ready now
+  Get.put(prefs); 
   
-  // Initialize controllers
   Get.lazyPut(() => AppsController(prefs: Get.find()));
   Get.lazyPut(() => HomeScreenController(prefs: Get.find()));
   Get.lazyPut(() => MethodChannelController());
   Get.lazyPut(() => PermissionController());
-  // Uncomment if PasswordController is used
-  // Get.lazyPut(() => PasswordController(prefs: Get.find()));
+
 }

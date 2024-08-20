@@ -46,14 +46,12 @@ class _NewPasswordState extends State<NewPassword> {
           ? 'Confirm Password cannot be empty'
           : null;
 
-      // Count the number of empty fields
       emptyFieldsCount = [
         _passwordErrorMessage,
         _confirmPasswordErrorMessage,
       ].where((message) => message != null).length;
     });
 
-    // If more than one field is empty, show a toast message and clear individual errors
     if (emptyFieldsCount > 1) {
       setState(() {
         _passwordErrorMessage = null;
@@ -64,12 +62,10 @@ class _NewPasswordState extends State<NewPassword> {
       return;
     }
 
-    // If only one field is empty, show the error message for that field only
     if (emptyFieldsCount == 1) {
       return;
     }
 
-    // Validate password match
     if (passwordController.text != confirmPasswordController.text) {
       setState(() {
         _confirmPasswordErrorMessage = 'Passwords do not match';
@@ -77,7 +73,6 @@ class _NewPasswordState extends State<NewPassword> {
       return;
     }
 
-    // Proceed with updating the password
     final String newPassword = passwordController.text;
 
     final Uri url = Uri.parse('http://192.168.1.79:3000/newPassword');
@@ -95,7 +90,7 @@ class _NewPasswordState extends State<NewPassword> {
       final responseBody = jsonDecode(response.body);
 
       if (response.statusCode == 201 && mounted) {
-        _cancelCurrentToast(); // Cancel any active toast
+        _cancelCurrentToast(); 
         _showToast(context, 'Password updated successfully', isSuccess: true);
 
         await Future.delayed(const Duration(seconds: 1));
@@ -165,7 +160,7 @@ class _NewPasswordState extends State<NewPassword> {
                     labelText: 'Password',
                     errorText: _passwordErrorMessage,
                     errorStyle:
-                        const TextStyle(fontSize: 12), // Smaller error text
+                        const TextStyle(fontSize: 12), 
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -180,7 +175,7 @@ class _NewPasswordState extends State<NewPassword> {
                     labelText: 'Confirm Password',
                     errorText: _confirmPasswordErrorMessage,
                     errorStyle:
-                        const TextStyle(fontSize: 12), // Smaller error text
+                        const TextStyle(fontSize: 12), 
                   ),
                 ),
                 const SizedBox(height: 25),
@@ -214,13 +209,12 @@ class _NewPasswordState extends State<NewPassword> {
   }
 }
 
-// Top-level function to show toast
 void _showToast(BuildContext context, String message,
     {required bool isSuccess}) {
   FToast fToast = FToast();
   fToast.init(context);
   fToast
-      .removeCustomToast(); // Cancel any existing toast before showing a new one
+      .removeCustomToast();
   fToast.showToast(
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),

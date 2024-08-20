@@ -110,6 +110,8 @@ class _PinScreenState extends State<PinScreen> {
         bool success = await prefs.setString('user_pin', pin);
         await prefs.setBool('isPinSetupComplete', true);
 
+        await prefs.setString('auth_method', 'PIN');
+
         if (success) {
           if (mounted) {
             _showToast(successMessage, isSuccess: true);
@@ -133,8 +135,7 @@ class _PinScreenState extends State<PinScreen> {
   }
 
   void _showToast(String message, {required bool isSuccess}) {
-    _currentToast!
-        .removeCustomToast(); // Cancel any existing toast before showing a new one
+    _currentToast!.removeCustomToast();
     _currentToast!.showToast(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -250,7 +251,7 @@ class _PinScreenState extends State<PinScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: keys.map((key) {
           if (key == null) {
-            return const SizedBox(width: 80); // Empty space for alignment
+            return const SizedBox(width: 80);
           } else if (key == "back") {
             return buildKey(key, Icons.backspace);
           } else {
@@ -265,11 +266,11 @@ class _PinScreenState extends State<PinScreen> {
     return GestureDetector(
       onTap: () {
         setState(() {
-          _blinkKey = value; // Set the key to blink
+          _blinkKey = value;
         });
         Future.delayed(const Duration(milliseconds: 100), () {
           setState(() {
-            _blinkKey = null; // Reset after blinking
+            _blinkKey = null;
           });
         });
         _handleKeyTap(value);

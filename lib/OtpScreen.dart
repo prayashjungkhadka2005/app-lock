@@ -244,13 +244,12 @@ class OtpScreenState extends State<OtpScreen> {
   }
 }
 
-// Top-level function to show toast
 void _showToast(BuildContext context, String message,
     {required bool isSuccess}) {
   FToast fToast = FToast();
   fToast.init(context);
   fToast
-      .removeCustomToast(); // Cancel any existing toast before showing a new one
+      .removeCustomToast(); 
   fToast.showToast(
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
@@ -279,7 +278,6 @@ void _showToast(BuildContext context, String message,
   );
 }
 
-// Top-level function to cancel toast
 void _cancelCurrentToast() {
   FToast().removeCustomToast();
 }
